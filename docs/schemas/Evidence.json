@@ -1,0 +1,46 @@
+{
+  "properties": {
+    "page": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Page"
+    },
+    "bbox": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "[x0, y0, x1, y1] in PDF points",
+      "title": "Bbox"
+    },
+    "snippet": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Snippet"
+    }
+  },
+  "title": "Evidence",
+  "type": "object"
+}

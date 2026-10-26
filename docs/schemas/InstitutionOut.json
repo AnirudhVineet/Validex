@@ -1,0 +1,70 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "address": {
+      "title": "Address",
+      "type": "string"
+    },
+    "state": {
+      "title": "State",
+      "type": "string"
+    },
+    "aicte_ref": {
+      "title": "Aicte Ref",
+      "type": "string"
+    },
+    "prior_eoa_year": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Prior Eoa Year"
+    },
+    "approved_intake": {
+      "title": "Approved Intake",
+      "type": "integer"
+    },
+    "faculty_count": {
+      "title": "Faculty Count",
+      "type": "integer"
+    },
+    "deficiency_status": {
+      "title": "Deficiency Status",
+      "type": "string"
+    },
+    "ter_payment_status": {
+      "title": "Ter Payment Status",
+      "type": "string"
+    },
+    "is_synthetic": {
+      "title": "Is Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "address",
+    "state",
+    "aicte_ref",
+    "prior_eoa_year",
+    "approved_intake",
+    "faculty_count",
+    "deficiency_status",
+    "ter_payment_status",
+    "is_synthetic"
+  ],
+  "title": "InstitutionOut",
+  "type": "object"
+}

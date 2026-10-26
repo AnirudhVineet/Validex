@@ -1,0 +1,223 @@
+{
+  "$defs": {
+    "Evidence": {
+      "properties": {
+        "page": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "[x0, y0, x1, y1] in PDF points",
+          "title": "Bbox"
+        },
+        "snippet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snippet"
+        }
+      },
+      "title": "Evidence",
+      "type": "object"
+    },
+    "FindingCategory": {
+      "enum": [
+        "completeness",
+        "expiry",
+        "consistency",
+        "anomaly",
+        "verification",
+        "infrastructure"
+      ],
+      "title": "FindingCategory",
+      "type": "string"
+    },
+    "FindingStatus": {
+      "enum": [
+        "open",
+        "resolved",
+        "dismissed",
+        "escalated"
+      ],
+      "title": "FindingStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "application_id": {
+      "title": "Application Id",
+      "type": "string"
+    },
+    "document_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Document Id"
+    },
+    "validation_run_id": {
+      "title": "Validation Run Id",
+      "type": "string"
+    },
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "rule_version": {
+      "title": "Rule Version",
+      "type": "string"
+    },
+    "category": {
+      "$ref": "#/$defs/FindingCategory"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "found_value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Found Value"
+    },
+    "expected_value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Expected Value"
+    },
+    "evidence": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Evidence"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "explanation": {
+      "title": "Explanation",
+      "type": "string"
+    },
+    "suggested_action": {
+      "title": "Suggested Action",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/FindingStatus"
+    },
+    "visible_to_applicant": {
+      "title": "Visible To Applicant",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "reviewed_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reviewed By"
+    },
+    "review_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Review Reason"
+    }
+  },
+  "required": [
+    "id",
+    "application_id",
+    "document_id",
+    "validation_run_id",
+    "rule_id",
+    "rule_version",
+    "category",
+    "severity",
+    "title",
+    "found_value",
+    "expected_value",
+    "evidence",
+    "explanation",
+    "suggested_action",
+    "status",
+    "visible_to_applicant",
+    "created_at",
+    "reviewed_by",
+    "review_reason"
+  ],
+  "title": "FindingOut",
+  "type": "object"
+}

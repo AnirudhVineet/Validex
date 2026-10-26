@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "email": {
+      "maxLength": 255,
+      "minLength": 3,
+      "title": "Email",
+      "type": "string"
+    },
+    "password": {
+      "minLength": 1,
+      "title": "Password",
+      "type": "string"
+    }
+  },
+  "required": [
+    "email",
+    "password"
+  ],
+  "title": "LoginRequest",
+  "type": "object"
+}

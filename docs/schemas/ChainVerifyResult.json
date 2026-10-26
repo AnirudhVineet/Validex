@@ -1,0 +1,42 @@
+{
+  "properties": {
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    },
+    "events_checked": {
+      "title": "Events Checked",
+      "type": "integer"
+    },
+    "first_bad_event_id": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "First Bad Event Id"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    }
+  },
+  "required": [
+    "valid",
+    "events_checked"
+  ],
+  "title": "ChainVerifyResult",
+  "type": "object"
+}

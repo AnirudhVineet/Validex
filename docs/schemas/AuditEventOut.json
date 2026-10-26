@@ -1,0 +1,54 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "integer"
+    },
+    "actor": {
+      "title": "Actor",
+      "type": "string"
+    },
+    "event_type": {
+      "title": "Event Type",
+      "type": "string"
+    },
+    "target_type": {
+      "title": "Target Type",
+      "type": "string"
+    },
+    "target_id": {
+      "title": "Target Id",
+      "type": "string"
+    },
+    "payload": {
+      "title": "Payload",
+      "type": "object"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "prev_hash": {
+      "title": "Prev Hash",
+      "type": "string"
+    },
+    "hash": {
+      "title": "Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "actor",
+    "event_type",
+    "target_type",
+    "target_id",
+    "payload",
+    "timestamp",
+    "prev_hash",
+    "hash"
+  ],
+  "title": "AuditEventOut",
+  "type": "object"
+}

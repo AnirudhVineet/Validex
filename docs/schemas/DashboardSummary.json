@@ -1,0 +1,41 @@
+{
+  "$defs": {
+    "Role": {
+      "enum": [
+        "applicant",
+        "scrutiny_officer",
+        "senior_authority",
+        "inspector",
+        "admin"
+      ],
+      "title": "Role",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "role": {
+      "$ref": "#/$defs/Role"
+    },
+    "counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Counts",
+      "type": "object"
+    },
+    "notes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "role",
+    "counts"
+  ],
+  "title": "DashboardSummary",
+  "type": "object"
+}

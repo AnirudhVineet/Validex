@@ -1,0 +1,87 @@
+{
+  "$defs": {
+    "ExtractionSource": {
+      "enum": [
+        "pdf_text",
+        "ocr",
+        "manual"
+      ],
+      "title": "ExtractionSource",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "field_name": {
+      "title": "Field Name",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    },
+    "confidence": {
+      "title": "Confidence",
+      "type": "number"
+    },
+    "page": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Page"
+    },
+    "bbox": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Bbox"
+    },
+    "source": {
+      "$ref": "#/$defs/ExtractionSource"
+    },
+    "needs_confirmation": {
+      "title": "Needs Confirmation",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "document_id",
+    "field_name",
+    "value",
+    "confidence",
+    "page",
+    "bbox",
+    "source",
+    "needs_confirmation"
+  ],
+  "title": "ExtractedFieldOut",
+  "type": "object"
+}

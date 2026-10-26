@@ -1,0 +1,52 @@
+{
+  "$defs": {
+    "Role": {
+      "enum": [
+        "applicant",
+        "scrutiny_officer",
+        "senior_authority",
+        "inspector",
+        "admin"
+      ],
+      "title": "Role",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "email": {
+      "title": "Email",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "role": {
+      "$ref": "#/$defs/Role"
+    },
+    "institution_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Institution Id"
+    }
+  },
+  "required": [
+    "id",
+    "email",
+    "name",
+    "role"
+  ],
+  "title": "UserOut",
+  "type": "object"
+}
