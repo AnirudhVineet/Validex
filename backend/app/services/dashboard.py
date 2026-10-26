@@ -16,6 +16,19 @@ def _status_counts(db: Session, institution_id: str | None = None) -> dict[str, 
     return counts
 
 
+def _open_findings_in_latest_runs(db: Session) -> int:
+    """Open findings in each application's latest official run (old runs and pre-checks excluded)."""
+    from app.services.validation import latest_run
+
+    total = 0
+    for app in db.execute(select(Application).where(Application.submitted_at.is_not(None))).scalars():
+        run = latest_run(db, app, include_precheck=False)
+        if run is not None:
+            total += db.scalar(select(func.count()).select_from(Finding).where(
+                Finding.validation_run_id == run.id, Finding.status == FindingStatus.open)) or 0
+    return total
+
+
 def summary_for(db: Session, user: User) -> dict:
     """Return {role, counts, notes} for the given user's dashboard."""
     if user.role == Role.applicant:
@@ -24,9 +37,7 @@ def summary_for(db: Session, user: User) -> dict:
 
     if user.role in (Role.scrutiny_officer, Role.senior_authority):
         counts = _status_counts(db)
-        counts["open_findings"] = db.scalar(
-            select(func.count()).select_from(Finding).where(Finding.status == FindingStatus.open)
-        ) or 0
+        counts["open_findings"] = _open_findings_in_latest_runs(db)
         return {"role": user.role, "counts": counts, "notes": []}
 
     if user.role == Role.inspector:

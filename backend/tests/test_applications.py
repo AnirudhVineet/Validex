@@ -208,3 +208,14 @@ def test_conditional_document_required_for_large_increase(client, auth_header, m
     client.post(f"/api/applications/{app['id']}/validate?precheck=true", headers=h)
     missing = [f for f in report(client, h, app["id"])["findings"] if f["rule_id"] == "COMP-001"]
     assert len(missing) == 1 and "Accreditation" in missing[0]["title"]
+
+
+def test_dashboard_counts_only_latest_official_run(client, auth_header, make_pdf):
+    h = auth_header(Role.applicant)
+    app = create_app(client, h)
+    upload_set(client, h, app["id"], make_pdf, {"fire_noc": "expired"})
+    client.post(f"/api/applications/{app['id']}/validate?precheck=true", headers=h)  # not counted
+    client.post(f"/api/applications/{app['id']}/submit", headers=h)
+    officer = auth_header(Role.scrutiny_officer)
+    client.post(f"/api/applications/{app['id']}/validate", headers=officer)  # re-run replaces the first run
+    assert client.get("/api/dashboard", headers=officer).json()["counts"]["open_findings"] == 1
