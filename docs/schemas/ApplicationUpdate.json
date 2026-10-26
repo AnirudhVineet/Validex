@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "form_data": {
+      "title": "Form Data",
+      "type": "object"
+    }
+  },
+  "required": [
+    "form_data"
+  ],
+  "title": "ApplicationUpdate",
+  "type": "object"
+}

@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "url": {
+      "title": "Url",
+      "type": "string"
+    },
+    "expires_in_seconds": {
+      "title": "Expires In Seconds",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "url",
+    "expires_in_seconds"
+  ],
+  "title": "FileLinkOut",
+  "type": "object"
+}

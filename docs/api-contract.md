@@ -6,11 +6,29 @@ Shapes are defined in docs/CONTRACTS.md and docs/schemas/*.json.
 
 | Method | Path | Summary | Request | Response |
 |---|---|---|---|---|
+| POST | `/api/applications` | Create | ApplicationCreate |  |
+| GET | `/api/applications` | List Applications |  | list[ApplicationListItem] |
+| GET | `/api/applications/{application_id}` | Get One |  | ApplicationOut |
+| PATCH | `/api/applications/{application_id}` | Update | ApplicationUpdate | ApplicationOut |
+| GET | `/api/applications/{application_id}/checklist` | Checklist |  | list[ChecklistItemOut] |
+| POST | `/api/applications/{application_id}/decision` | Decision | DecisionRequest | ApplicationOut |
+| POST | `/api/applications/{application_id}/documents` | Upload |  |  |
+| GET | `/api/applications/{application_id}/documents` | List Documents |  | list[DocumentOut] |
+| GET | `/api/applications/{application_id}/report` | Report |  | ReportOut |
+| GET | `/api/applications/{application_id}/runs` | Runs |  | list[ValidationRunOut] |
+| POST | `/api/applications/{application_id}/start-scrutiny` | Start Scrutiny |  | ApplicationOut |
+| POST | `/api/applications/{application_id}/submit` | Submit |  | ApplicationOut |
+| POST | `/api/applications/{application_id}/validate` | Validate |  | ValidationRunOut |
+| GET | `/api/applications/{application_id}/versions` | Versions |  | list[ApplicationVersionOut] |
 | GET | `/api/audit` | List Events |  | list[AuditEventOut] |
 | GET | `/api/audit/verify` | Verify |  | ChainVerifyResult |
 | POST | `/api/auth/login` | Login | LoginRequest | TokenResponse |
 | GET | `/api/auth/me` | Me |  | UserOut |
 | GET | `/api/dashboard` | Get Dashboard |  | DashboardSummary |
+| GET | `/api/documents/{document_id}/fields` | Fields |  | list[ExtractedFieldOut] |
+| POST | `/api/documents/{document_id}/link` | Link |  | FileLinkOut |
+| PATCH | `/api/fields/{field_id}` | Correct | FieldCorrection | ExtractedFieldOut |
+| POST | `/api/findings/{finding_id}/review` | Review Finding | ReviewRequest | FindingOut |
 | GET | `/api/health` | Health |  | object |
 | GET | `/api/users` | List Users |  | list[UserOut] |
 

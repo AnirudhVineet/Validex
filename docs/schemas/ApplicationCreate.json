@@ -1,0 +1,35 @@
+{
+  "$defs": {
+    "ApplicationCategory": {
+      "enum": [
+        "eoa_no_change",
+        "eoa_increase_intake"
+      ],
+      "title": "ApplicationCategory",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "category": {
+      "$ref": "#/$defs/ApplicationCategory"
+    },
+    "academic_year": {
+      "examples": [
+        "2027-28"
+      ],
+      "pattern": "^[0-9]{4}-[0-9]{2}$",
+      "title": "Academic Year",
+      "type": "string"
+    },
+    "form_data": {
+      "title": "Form Data",
+      "type": "object"
+    }
+  },
+  "required": [
+    "category",
+    "academic_year"
+  ],
+  "title": "ApplicationCreate",
+  "type": "object"
+}

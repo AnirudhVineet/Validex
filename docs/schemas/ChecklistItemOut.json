@@ -1,0 +1,74 @@
+{
+  "properties": {
+    "doc_type": {
+      "title": "Doc Type",
+      "type": "string"
+    },
+    "label": {
+      "title": "Label",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "requirement": {
+      "description": "required | optional (after resolving conditionals)",
+      "title": "Requirement",
+      "type": "string"
+    },
+    "configured_as": {
+      "description": "required | optional | conditional",
+      "title": "Configured As",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "condition_unresolved": {
+      "title": "Condition Unresolved",
+      "type": "boolean"
+    },
+    "document_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Document Id"
+    },
+    "document_status": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Document Status"
+    },
+    "uploaded": {
+      "title": "Uploaded",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "doc_type",
+    "label",
+    "description",
+    "requirement",
+    "configured_as",
+    "reason",
+    "condition_unresolved",
+    "document_id",
+    "document_status",
+    "uploaded"
+  ],
+  "title": "ChecklistItemOut",
+  "type": "object"
+}

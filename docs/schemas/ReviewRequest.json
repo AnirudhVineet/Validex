@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "action": {
+      "description": "resolve | dismiss | escalate",
+      "title": "Action",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "action",
+    "reason"
+  ],
+  "title": "ReviewRequest",
+  "type": "object"
+}

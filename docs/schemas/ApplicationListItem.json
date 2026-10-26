@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "ApplicationCategory": {
+      "enum": [
+        "eoa_no_change",
+        "eoa_increase_intake"
+      ],
+      "title": "ApplicationCategory",
+      "type": "string"
+    },
+    "ApplicationStatus": {
+      "enum": [
+        "draft",
+        "submitted",
+        "under_scrutiny",
+        "returned_for_correction",
+        "escalated",
+        "scrutiny_complete"
+      ],
+      "title": "ApplicationStatus",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "institution_id": {
+      "title": "Institution Id",
+      "type": "string"
+    },
+    "category": {
+      "$ref": "#/$defs/ApplicationCategory"
+    },
+    "academic_year": {
+      "title": "Academic Year",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ApplicationStatus"
+    },
+    "current_version": {
+      "title": "Current Version",
+      "type": "integer"
+    },
+    "form_data": {
+      "title": "Form Data",
+      "type": "object"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "submitted_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Submitted At"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "institution_name": {
+      "title": "Institution Name",
+      "type": "string"
+    },
+    "open_findings": {
+      "default": 0,
+      "title": "Open Findings",
+      "type": "integer"
+    },
+    "critical_findings": {
+      "default": 0,
+      "title": "Critical Findings",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "institution_id",
+    "category",
+    "academic_year",
+    "status",
+    "current_version",
+    "form_data",
+    "created_at",
+    "submitted_at",
+    "updated_at",
+    "institution_name"
+  ],
+  "title": "ApplicationListItem",
+  "type": "object"
+}

@@ -1,0 +1,818 @@
+{
+  "$defs": {
+    "ApplicationCategory": {
+      "enum": [
+        "eoa_no_change",
+        "eoa_increase_intake"
+      ],
+      "title": "ApplicationCategory",
+      "type": "string"
+    },
+    "ApplicationOut": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "institution_id": {
+          "title": "Institution Id",
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/ApplicationCategory"
+        },
+        "academic_year": {
+          "title": "Academic Year",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ApplicationStatus"
+        },
+        "current_version": {
+          "title": "Current Version",
+          "type": "integer"
+        },
+        "form_data": {
+          "title": "Form Data",
+          "type": "object"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "submitted_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Submitted At"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "institution_id",
+        "category",
+        "academic_year",
+        "status",
+        "current_version",
+        "form_data",
+        "created_at",
+        "submitted_at",
+        "updated_at"
+      ],
+      "title": "ApplicationOut",
+      "type": "object"
+    },
+    "ApplicationStatus": {
+      "enum": [
+        "draft",
+        "submitted",
+        "under_scrutiny",
+        "returned_for_correction",
+        "escalated",
+        "scrutiny_complete"
+      ],
+      "title": "ApplicationStatus",
+      "type": "string"
+    },
+    "ChecklistItemOut": {
+      "properties": {
+        "doc_type": {
+          "title": "Doc Type",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "requirement": {
+          "description": "required | optional (after resolving conditionals)",
+          "title": "Requirement",
+          "type": "string"
+        },
+        "configured_as": {
+          "description": "required | optional | conditional",
+          "title": "Configured As",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "condition_unresolved": {
+          "title": "Condition Unresolved",
+          "type": "boolean"
+        },
+        "document_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Document Id"
+        },
+        "document_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Document Status"
+        },
+        "uploaded": {
+          "title": "Uploaded",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "doc_type",
+        "label",
+        "description",
+        "requirement",
+        "configured_as",
+        "reason",
+        "condition_unresolved",
+        "document_id",
+        "document_status",
+        "uploaded"
+      ],
+      "title": "ChecklistItemOut",
+      "type": "object"
+    },
+    "Evidence": {
+      "properties": {
+        "page": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "[x0, y0, x1, y1] in PDF points",
+          "title": "Bbox"
+        },
+        "snippet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snippet"
+        }
+      },
+      "title": "Evidence",
+      "type": "object"
+    },
+    "ExtractedFieldOut": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "field_name": {
+          "title": "Field Name",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "confidence": {
+          "title": "Confidence",
+          "type": "number"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Page"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bbox"
+        },
+        "source": {
+          "$ref": "#/$defs/ExtractionSource"
+        },
+        "needs_confirmation": {
+          "title": "Needs Confirmation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "document_id",
+        "field_name",
+        "value",
+        "confidence",
+        "page",
+        "bbox",
+        "source",
+        "needs_confirmation"
+      ],
+      "title": "ExtractedFieldOut",
+      "type": "object"
+    },
+    "ExtractionSource": {
+      "enum": [
+        "pdf_text",
+        "ocr",
+        "manual"
+      ],
+      "title": "ExtractionSource",
+      "type": "string"
+    },
+    "FindingCategory": {
+      "enum": [
+        "completeness",
+        "expiry",
+        "consistency",
+        "anomaly",
+        "verification",
+        "infrastructure"
+      ],
+      "title": "FindingCategory",
+      "type": "string"
+    },
+    "FindingOut": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "application_id": {
+          "title": "Application Id",
+          "type": "string"
+        },
+        "document_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Document Id"
+        },
+        "validation_run_id": {
+          "title": "Validation Run Id",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "rule_version": {
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/FindingCategory"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "found_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Found Value"
+        },
+        "expected_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Value"
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "explanation": {
+          "title": "Explanation",
+          "type": "string"
+        },
+        "suggested_action": {
+          "title": "Suggested Action",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/FindingStatus"
+        },
+        "visible_to_applicant": {
+          "title": "Visible To Applicant",
+          "type": "boolean"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "reviewed_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reviewed By"
+        },
+        "review_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Review Reason"
+        }
+      },
+      "required": [
+        "id",
+        "application_id",
+        "document_id",
+        "validation_run_id",
+        "rule_id",
+        "rule_version",
+        "category",
+        "severity",
+        "title",
+        "found_value",
+        "expected_value",
+        "evidence",
+        "explanation",
+        "suggested_action",
+        "status",
+        "visible_to_applicant",
+        "created_at",
+        "reviewed_by",
+        "review_reason"
+      ],
+      "title": "FindingOut",
+      "type": "object"
+    },
+    "FindingStatus": {
+      "enum": [
+        "open",
+        "resolved",
+        "dismissed",
+        "escalated"
+      ],
+      "title": "FindingStatus",
+      "type": "string"
+    },
+    "IncompleteCheck": {
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "document_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Document Id"
+        },
+        "doc_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Doc Type"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "document_id",
+        "doc_type",
+        "reason"
+      ],
+      "title": "IncompleteCheck",
+      "type": "object"
+    },
+    "InstitutionOut": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "address": {
+          "title": "Address",
+          "type": "string"
+        },
+        "state": {
+          "title": "State",
+          "type": "string"
+        },
+        "aicte_ref": {
+          "title": "Aicte Ref",
+          "type": "string"
+        },
+        "prior_eoa_year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prior Eoa Year"
+        },
+        "approved_intake": {
+          "title": "Approved Intake",
+          "type": "integer"
+        },
+        "faculty_count": {
+          "title": "Faculty Count",
+          "type": "integer"
+        },
+        "deficiency_status": {
+          "title": "Deficiency Status",
+          "type": "string"
+        },
+        "ter_payment_status": {
+          "title": "Ter Payment Status",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "title": "Is Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "address",
+        "state",
+        "aicte_ref",
+        "prior_eoa_year",
+        "approved_intake",
+        "faculty_count",
+        "deficiency_status",
+        "ter_payment_status",
+        "is_synthetic"
+      ],
+      "title": "InstitutionOut",
+      "type": "object"
+    },
+    "ReportDocument": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "doc_type": {
+          "title": "Doc Type",
+          "type": "string"
+        },
+        "original_filename": {
+          "title": "Original Filename",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uploaded_at": {
+          "format": "date-time",
+          "title": "Uploaded At",
+          "type": "string"
+        },
+        "classified_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Classified Type"
+        },
+        "extraction_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Extraction Method"
+        },
+        "extraction_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Extraction Error"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/ExtractedFieldOut"
+          },
+          "title": "Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "doc_type",
+        "original_filename",
+        "status",
+        "sha256",
+        "uploaded_at",
+        "classified_type",
+        "extraction_method",
+        "extraction_error",
+        "fields"
+      ],
+      "title": "ReportDocument",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "ValidationRunOut": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "application_id": {
+          "title": "Application Id",
+          "type": "string"
+        },
+        "application_version": {
+          "title": "Application Version",
+          "type": "integer"
+        },
+        "rule_set_version": {
+          "title": "Rule Set Version",
+          "type": "string"
+        },
+        "checklist_version": {
+          "title": "Checklist Version",
+          "type": "string"
+        },
+        "is_precheck": {
+          "title": "Is Precheck",
+          "type": "boolean"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "incomplete_checks": {
+          "items": {
+            "$ref": "#/$defs/IncompleteCheck"
+          },
+          "title": "Incomplete Checks",
+          "type": "array"
+        },
+        "started_by": {
+          "title": "Started By",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Finished At"
+        }
+      },
+      "required": [
+        "id",
+        "application_id",
+        "application_version",
+        "rule_set_version",
+        "checklist_version",
+        "is_precheck",
+        "status",
+        "incomplete_checks",
+        "started_by",
+        "started_at",
+        "finished_at"
+      ],
+      "title": "ValidationRunOut",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "application": {
+      "$ref": "#/$defs/ApplicationOut"
+    },
+    "institution": {
+      "$ref": "#/$defs/InstitutionOut"
+    },
+    "run": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ValidationRunOut"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "summary": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Summary",
+      "type": "object"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/FindingOut"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "incomplete_checks": {
+      "items": {
+        "$ref": "#/$defs/IncompleteCheck"
+      },
+      "title": "Incomplete Checks",
+      "type": "array"
+    },
+    "checklist": {
+      "items": {
+        "$ref": "#/$defs/ChecklistItemOut"
+      },
+      "title": "Checklist",
+      "type": "array"
+    },
+    "missing_form_fields": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Form Fields",
+      "type": "array"
+    },
+    "documents": {
+      "items": {
+        "$ref": "#/$defs/ReportDocument"
+      },
+      "title": "Documents",
+      "type": "array"
+    },
+    "disclaimer": {
+      "title": "Disclaimer",
+      "type": "string"
+    }
+  },
+  "required": [
+    "application",
+    "institution",
+    "run",
+    "summary",
+    "findings",
+    "incomplete_checks",
+    "checklist",
+    "missing_form_fields",
+    "documents",
+    "disclaimer"
+  ],
+  "title": "ReportOut",
+  "type": "object"
+}

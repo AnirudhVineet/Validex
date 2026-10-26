@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "decision": {
+      "description": "mark_scrutiny_complete | return_for_correction | escalate",
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision",
+    "reason"
+  ],
+  "title": "DecisionRequest",
+  "type": "object"
+}

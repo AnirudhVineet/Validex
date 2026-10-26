@@ -1,0 +1,111 @@
+{
+  "$defs": {
+    "DocumentStatus": {
+      "enum": [
+        "uploaded",
+        "processing",
+        "extracted",
+        "failed"
+      ],
+      "title": "DocumentStatus",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "application_id": {
+      "title": "Application Id",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "doc_type": {
+      "title": "Doc Type",
+      "type": "string"
+    },
+    "original_filename": {
+      "title": "Original Filename",
+      "type": "string"
+    },
+    "sha256": {
+      "title": "Sha256",
+      "type": "string"
+    },
+    "size_bytes": {
+      "title": "Size Bytes",
+      "type": "integer"
+    },
+    "mime_type": {
+      "title": "Mime Type",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/DocumentStatus"
+    },
+    "is_current": {
+      "title": "Is Current",
+      "type": "boolean"
+    },
+    "classified_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Classified Type"
+    },
+    "extraction_method": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Extraction Method"
+    },
+    "extraction_error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Extraction Error"
+    },
+    "uploaded_at": {
+      "format": "date-time",
+      "title": "Uploaded At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "application_id",
+    "version",
+    "doc_type",
+    "original_filename",
+    "sha256",
+    "size_bytes",
+    "mime_type",
+    "status",
+    "is_current",
+    "classified_type",
+    "extraction_method",
+    "extraction_error",
+    "uploaded_at"
+  ],
+  "title": "DocumentOut",
+  "type": "object"
+}

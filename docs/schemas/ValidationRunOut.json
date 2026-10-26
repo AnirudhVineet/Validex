@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "IncompleteCheck": {
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "document_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Document Id"
+        },
+        "doc_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Doc Type"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "document_id",
+        "doc_type",
+        "reason"
+      ],
+      "title": "IncompleteCheck",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "application_id": {
+      "title": "Application Id",
+      "type": "string"
+    },
+    "application_version": {
+      "title": "Application Version",
+      "type": "integer"
+    },
+    "rule_set_version": {
+      "title": "Rule Set Version",
+      "type": "string"
+    },
+    "checklist_version": {
+      "title": "Checklist Version",
+      "type": "string"
+    },
+    "is_precheck": {
+      "title": "Is Precheck",
+      "type": "boolean"
+    },
+    "status": {
+      "title": "Status",
+      "type": "string"
+    },
+    "incomplete_checks": {
+      "items": {
+        "$ref": "#/$defs/IncompleteCheck"
+      },
+      "title": "Incomplete Checks",
+      "type": "array"
+    },
+    "started_by": {
+      "title": "Started By",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Finished At"
+    }
+  },
+  "required": [
+    "id",
+    "application_id",
+    "application_version",
+    "rule_set_version",
+    "checklist_version",
+    "is_precheck",
+    "status",
+    "incomplete_checks",
+    "started_by",
+    "started_at",
+    "finished_at"
+  ],
+  "title": "ValidationRunOut",
+  "type": "object"
+}

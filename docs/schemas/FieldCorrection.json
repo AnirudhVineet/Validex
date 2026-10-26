@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "value": {
+      "minLength": 1,
+      "title": "Value",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "value",
+    "reason"
+  ],
+  "title": "FieldCorrection",
+  "type": "object"
+}

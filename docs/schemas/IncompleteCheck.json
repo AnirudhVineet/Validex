@@ -1,0 +1,42 @@
+{
+  "properties": {
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "document_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Document Id"
+    },
+    "doc_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Doc Type"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule_id",
+    "document_id",
+    "doc_type",
+    "reason"
+  ],
+  "title": "IncompleteCheck",
+  "type": "object"
+}

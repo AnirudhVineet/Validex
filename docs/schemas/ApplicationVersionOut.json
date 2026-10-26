@@ -1,0 +1,29 @@
+{
+  "properties": {
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "submitted_by": {
+      "title": "Submitted By",
+      "type": "string"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    },
+    "snapshot": {
+      "title": "Snapshot",
+      "type": "object"
+    }
+  },
+  "required": [
+    "version",
+    "submitted_by",
+    "submitted_at",
+    "snapshot"
+  ],
+  "title": "ApplicationVersionOut",
+  "type": "object"
+}

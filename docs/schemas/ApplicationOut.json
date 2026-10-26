@@ -44,6 +44,10 @@
       "title": "Current Version",
       "type": "integer"
     },
+    "form_data": {
+      "title": "Form Data",
+      "type": "object"
+    },
     "created_at": {
       "format": "date-time",
       "title": "Created At",
@@ -60,6 +64,11 @@
         }
       ],
       "title": "Submitted At"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
     }
   },
   "required": [
@@ -69,8 +78,10 @@
     "academic_year",
     "status",
     "current_version",
+    "form_data",
     "created_at",
-    "submitted_at"
+    "submitted_at",
+    "updated_at"
   ],
   "title": "ApplicationOut",
   "type": "object"
