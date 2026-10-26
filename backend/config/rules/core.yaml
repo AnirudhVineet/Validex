@@ -4,7 +4,7 @@
 illustrative: true
 notice: "Illustrative rules for the prototype. Not official AICTE criteria."
 name: core
-version: 2
+version: 3
 rules:
   - id: COMP-001
     description: Every required checklist document is uploaded.
@@ -236,5 +236,33 @@ rules:
     severity: low
     condition: {check: ela_indicator}
     recommended_action: Inspect the highlighted region in the original image.
+    version: 1
+    visible_to_applicant: false
+
+  # ---- Cross-application intelligence (other institutions; officers only) ----
+  - id: XAPP-001
+    description: No other institution submitted the identical file.
+    category: anomaly
+    severity: medium
+    condition: {check: cross_application_matches, params: {kind: same_file}}
+    recommended_action: Compare both applications; the match may have a legitimate explanation.
+    version: 1
+    visible_to_applicant: false
+
+  - id: XAPP-002
+    description: The certificate / registration number is not used by another institution.
+    category: anomaly
+    severity: medium
+    condition: {check: cross_application_matches, params: {kind: certificate_number}}
+    recommended_action: Verify with the issuer which institution the certificate belongs to.
+    version: 1
+    visible_to_applicant: false
+
+  - id: XAPP-003
+    description: Faculty IDs are not also listed by another institution.
+    category: anomaly
+    severity: low
+    condition: {check: cross_application_matches, params: {kind: faculty_ids, min_count: 3}}
+    recommended_action: Check the shared faculty IDs; faculty can legitimately move between institutions.
     version: 1
     visible_to_applicant: false

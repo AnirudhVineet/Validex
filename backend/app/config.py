@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     # MOCK issuer records, generated with the synthetic documents by seed/generate_docs.py.
     mock_issuer_data_path: Path = BACKEND_DIR.parent / "seed" / "output" / "mock_issuer_data.json"
     pending_verification_alert_hours: int = 24
+    # Optional LLM case summary. OFF by default; never used for validation.
+    llm_summary_enabled: bool = False
+    llm_model: str = "claude-opus-5-5"
+    # Time-saved estimate: ASSUMPTIONS shown on screen, not measurements.
+    minutes_saved_per_document: int = 6
+    minutes_saved_per_verification: int = 4
+    minutes_saved_per_run: int = 10
 
 
 settings = Settings()

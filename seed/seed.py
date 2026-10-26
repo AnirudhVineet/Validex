@@ -95,6 +95,8 @@ def _drive_to_target(db, app: Application, spec: dict, applicant: User, officer:
         run_validation(db, applicant, app, precheck=True)
         return
     app_svc.submit(db, applicant, app)
+    # Spread submission dates so the ageing dashboard has something to show (SYNTHETIC).
+    app.submitted_at = app.submitted_at - timedelta(days=spec.get("age_days", 0))
     for req in verify_application(db, app, applicant.id):
         if spec.get("backdate_pending_hours") and req.status.value == "pending":
             req.requested_at = req.requested_at - timedelta(hours=spec["backdate_pending_hours"])
@@ -130,6 +132,7 @@ def seed_institutions_and_applications() -> list[dict]:
         pw = hash_password(DEMO_PASSWORD)
 
         for n, spec in enumerate(manifest["applications"], start=1):
+            spec.setdefault("age_days", (n * 7) % 45)
             inst = by_ref[spec["institution_ref"]]
             applicant = _get_or_create_user(db, f"applicant{n}@validex.demo", f"Applicant {n} (SYNTHETIC)",
                                             Role.applicant, inst.id, pw)

@@ -1,0 +1,19 @@
+# ILLUSTRATIVE infrastructure evidence items for the inspector advisory.
+# NOT taken from the official AICTE norms. The advisory only checks that evidence is present.
+illustrative: true
+items:
+  - key: classroom
+    label: Classroom
+    keywords: [classroom, lecture, hall]
+  - key: laboratory
+    label: Laboratory
+    keywords: [laboratory, lab, workshop]
+  - key: library
+    label: Library
+    keywords: [library, reading room, books]
+  - key: fire_safety_equipment
+    label: Fire safety equipment
+    keywords: [extinguisher, fire, hydrant, exit]
+  - key: accessible_entrance
+    label: Accessible entrance (ramp)
+    keywords: [ramp, accessible, wheelchair]

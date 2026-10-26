@@ -19,6 +19,7 @@ from app.services.checklist import resolve_checklist
 from app.services.rules.context import DocView, FieldView, InstitutionView, ValidationContext, VerificationView
 from app.services.rules.evaluator import evaluate
 from app.services.rules.loader import get_checklist, get_rule_set, load_doc_types, version_label
+from app.services.crossapp import find_matches
 from app.services.verification import latest_verifications
 
 OFFICIAL_RUN_STATUSES = {ApplicationStatus.submitted, ApplicationStatus.under_scrutiny,
@@ -33,7 +34,8 @@ def build_context(db: Session, app: Application, today: date) -> tuple[Validatio
     checklist_row, checklist_cfg = get_checklist(db, app.category.value)
 
     docs: dict[str, DocView] = {}
-    for d in current_documents(db, app):
+    current = current_documents(db, app)
+    for d in current:
         fields = db.execute(select(ExtractedField).where(ExtractedField.document_id == d.id)).scalars()
         docs[d.doc_type] = DocView(
             id=d.id, doc_type=d.doc_type, status=d.status.value, classified_type=d.classified_type,
@@ -51,6 +53,7 @@ def build_context(db: Session, app: Application, today: date) -> tuple[Validatio
         verifications={doc_id: VerificationView(v.status.value, v.source, v.is_mock, v.reference_submitted,
                                                 v.mismatches or [], v.error)
                        for doc_id, v in latest_verifications(db, app).items()},
+        cross_matches=find_matches(db, app, current),
     )
     return ctx, version_label(checklist_row)
 

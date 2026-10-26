@@ -257,8 +257,10 @@ def _cert_number(doc_type: str, rng: random.Random, today: date, bad: bool) -> s
 
 
 def make_document(doc_type: str, variant: str, inst: InstitutionData, today: date,
-                  rng: random.Random, faculty_count: int | None = None) -> GeneratedDoc:
-    """Build one synthetic document. `faculty_count` overrides the row count for faculty lists."""
+                  rng: random.Random, faculty_count: int | None = None,
+                  shared_faculty_ids: list[str] | None = None) -> GeneratedDoc:
+    """Build one synthetic document. `faculty_count` overrides the row count for faculty lists;
+    `shared_faculty_ids` puts these IDs at the top of the list (cross-application scenarios)."""
     if variant in APPLICABLE and doc_type not in APPLICABLE[variant]:
         raise ValueError(f"variant {variant} does not apply to {doc_type}")
 
@@ -334,8 +336,9 @@ def make_document(doc_type: str, variant: str, inst: InstitutionData, today: dat
         lines = [("Name of Institution", name), ("As On", fmt(issue))]
         rows = [["S.No", "Faculty ID", "Name", "Designation"]]
         ids = []
+        shared = list(shared_faculty_ids or [])
         for i in range(count):
-            fid = f"FAC-{rng.randrange(10**6):06d}"
+            fid = shared.pop(0) if shared else f"FAC-{rng.randrange(10**6):06d}"
             ids.append(fid)
             person = f"{rng.choice(FIRST_NAMES)} {rng.choice(SURNAMES)}"
             rows.append([str(i + 1), fid, person, rng.choice(["Professor", "Associate Professor", "Assistant Professor"])])

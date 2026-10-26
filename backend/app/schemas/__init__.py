@@ -322,6 +322,87 @@ class RuleInfo(BaseModel):
     check: str
 
 
+class ExpiryItem(BaseModel):
+    application_id: str
+    institution: str
+    doc_type: str
+    expiry_date: str
+    days_left: int
+    status: str
+
+
+class ExpiryForecast(BaseModel):
+    window_days: int
+    today: str
+    expired: int
+    items: list[ExpiryItem]
+
+
+class CommonDeficiency(BaseModel):
+    rule_id: str
+    description: str
+    applications: int
+
+
+class SeniorOverview(BaseModel):
+    status_counts: dict[str, int]
+    ageing: dict[str, int]
+    common_deficiencies: list[CommonDeficiency]
+    open_applications: int
+
+
+class TimeSaved(BaseModel):
+    minutes: int
+    hours: float
+    inputs: dict[str, int]
+    assumption: str
+
+
+class InspectionOut(ORMModel):
+    id: str
+    application_id: str
+    inspector_id: str
+    notes: str
+    evidence_document_id: str | None
+    evidence_label: str | None
+    created_at: datetime
+
+
+class AdvisoryItem(BaseModel):
+    key: str
+    label: str
+    evidence_files: int
+    present: bool
+    labels_read_from_evidence: list[str]
+
+
+class InfrastructureAdvisory(BaseModel):
+    notice: str
+    illustrative: bool
+    ocr_available: bool
+    items: list[AdvisoryItem]
+
+
+class LetterDraft(BaseModel):
+    draft: bool
+    text: str
+    finding_ids: list[str]
+
+
+class SummaryPoint(BaseModel):
+    text: str
+    finding_ids: list[str]
+
+
+class CaseSummary(BaseModel):
+    enabled: bool
+    model: str | None
+    insufficient_evidence: bool
+    points: list[SummaryPoint]
+    dropped_points: int
+    note: str | None = None
+
+
 # ---- Audit ----
 class AuditEventOut(ORMModel):
     id: int
@@ -356,7 +437,8 @@ EXPORTED_SCHEMAS: list[type[BaseModel]] = [
     FileLinkOut, FieldCorrection, ReviewRequest, DecisionRequest, Evidence, ExtractedFieldOut,
     FindingOut, IncompleteCheck, ValidationRunOut, ReportOut, VerificationResultOut, VerificationOut,
     PriorityOut, NotificationOut, RuleSetVersionOut, RuleSetDetail, RuleText, RuleSave, RuleValidation,
-    RerunResult, RuleInfo,
+    RerunResult, RuleInfo, ExpiryForecast, SeniorOverview, TimeSaved, InspectionOut, InfrastructureAdvisory,
+    LetterDraft, CaseSummary,
     AuditEventOut, ChainVerifyResult, DashboardSummary,
 ]
 ReportOut.model_rebuild()

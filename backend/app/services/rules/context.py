@@ -84,6 +84,7 @@ class ValidationContext:
     today: date
     doc_labels: dict[str, str] = field(default_factory=dict)
     verifications: dict[str, VerificationView] = field(default_factory=dict)  # by document id
+    cross_matches: dict[str, list[dict]] = field(default_factory=dict)          # by document id
 
     def label(self, doc_type: str) -> str:
         return self.doc_labels.get(doc_type, doc_type.replace("_", " "))

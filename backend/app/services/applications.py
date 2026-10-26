@@ -18,6 +18,8 @@ from app.services.access import conflict, ensure_applicant_owner, ensure_editabl
 from app.services.rules.loader import get_checklist
 
 BLOCKING_SEVERITIES = {Severity.critical, Severity.high}
+# Inspector evidence is stored as a document but is never part of the checklist or validation.
+INSPECTION_DOC_TYPE = "inspection_evidence"
 MIN_REASON = 5
 
 
@@ -65,7 +67,8 @@ def update_form(db: Session, user: User, app: Application, form_data: dict) -> A
 def current_documents(db: Session, app: Application) -> list[ApplicationDocument]:
     return list(db.execute(
         select(ApplicationDocument)
-        .where(ApplicationDocument.application_id == app.id, ApplicationDocument.is_current)
+        .where(ApplicationDocument.application_id == app.id, ApplicationDocument.is_current,
+               ApplicationDocument.doc_type != INSPECTION_DOC_TYPE)
         .order_by(ApplicationDocument.doc_type)
     ).scalars())
 

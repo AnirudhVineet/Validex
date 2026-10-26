@@ -483,6 +483,39 @@ def signature_presence(ctx: ValidationContext, _: NoParams) -> CheckResult:
     return result
 
 
+# ---------- cross-application (other institutions) ----------
+
+class CrossAppParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: str = Field(pattern="^(same_file|certificate_number|faculty_ids)$")
+    min_count: int = Field(default=1, ge=1)
+
+
+_CROSS_TITLES = {
+    "same_file": "identical file submitted by another institution",
+    "certificate_number": "certificate number also used by another institution",
+    "faculty_ids": "faculty IDs also listed by another institution",
+}
+
+
+def cross_application_matches(ctx: ValidationContext, params: CrossAppParams) -> CheckResult:
+    result = CheckResult()
+    for doc in ctx.documents.values():
+        hits = [m for m in ctx.cross_matches.get(doc.id, [])
+                if m["kind"] == params.kind and m.get("count", 1) >= params.min_count]
+        for m in hits:
+            detail = m["detail"] if m["kind"] != "faculty_ids" else f"{m['count']} shared: {m['detail'][:120]}"
+            result.findings.append(FindingDraft(
+                title=f"Preliminary indicator: {ctx.label(doc.doc_type)} - {_CROSS_TITLES[m['kind']]}",
+                explanation=f"Also found in {m['other_institution']} (application {m['other_application_id'][:8]}, "
+                            f"{m['other_doc_type'].replace('_', ' ')}). Shared campus land, faculty who moved or a "
+                            "common template can explain this." + _MAY_BE_LEGIT,
+                document_id=doc.id, found_value=detail,
+                expected_value="unique to this institution",
+            ))
+    return result
+
+
 # name -> (function, params model)
 CHECKS: dict[str, tuple[Callable[..., CheckResult], type[BaseModel]]] = {
     "required_document_present": (required_document_present, NoParams),
@@ -506,4 +539,5 @@ CHECKS: dict[str, tuple[Callable[..., CheckResult], type[BaseModel]]] = {
     "irregular_dates": (irregular_dates, NoParams),
     "ela_indicator": (ela_indicator, NoParams),
     "signature_presence": (signature_presence, NoParams),
+    "cross_application_matches": (cross_application_matches, CrossAppParams),
 }

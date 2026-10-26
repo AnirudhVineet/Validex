@@ -97,6 +97,10 @@ SCENARIOS = [
     {"key": "same_file_two_slots", "institution": 17, "category": "eoa_no_change", "docs": VALID_SET,
      "duplicate": {"from": "affidavit", "to": "land_document"}, "target": "under_scrutiny",
      "expected": ["ANO-001", "COMP-002", "COMP-003", "VER-003"]},
+    # ---- Phase 3: cross-application intelligence (compares with the "clean" scenario's institution) ----
+    {"key": "shared_documents_other_institution", "institution": 18, "category": "eoa_no_change", "docs": VALID_SET,
+     "copy_from": {"land_document": "clean"}, "share_faculty_from": "clean", "shared_faculty": 5,
+     "target": "under_scrutiny", "expected": ["CONS-001", "CONS-002", "XAPP-001", "XAPP-002", "XAPP-003"]},
 ]
 
 # Files for the live demo upload (for the demo applicant's institution).

@@ -54,18 +54,30 @@ def generate_all(today: date | None = None, out_dir: Path = OUTPUT_DIR) -> dict:
     issuer_records: dict = {}
     applications = []
     rng = random.Random(2026)
+    files_by_scenario: dict[str, dict[str, str]] = {}
+    faculty_by_scenario: dict[str, list[str]] = {}
 
     for sc in SCENARIOS:
         inst = institutions[sc["institution"]]
         files = []
         for doc_type, variant in sc["docs"].items():
+            if doc_type in sc.get("copy_from", {}):  # byte-identical file from another scenario
+                files.append({"doc_type": doc_type, "file": files_by_scenario[sc["copy_from"][doc_type]][doc_type]})
+                continue
             faculty = None
             if doc_type == "faculty_list" and sc.get("faculty_ratio"):
                 faculty = round(inst["faculty_count"] * sc["faculty_ratio"])
-            gen = make_document(doc_type, variant, _inst_data(inst), today, rng, faculty_count=faculty)
+            shared = None
+            if doc_type == "faculty_list" and sc.get("share_faculty_from"):
+                shared = faculty_by_scenario[sc["share_faculty_from"]][: sc.get("shared_faculty", 5)]
+            gen = make_document(doc_type, variant, _inst_data(inst), today, rng, faculty_count=faculty,
+                                shared_faculty_ids=shared)
+            if doc_type == "faculty_list":
+                faculty_by_scenario[sc["key"]] = gen.truth["faculty_ids"].split(",")
             path = out_dir / "applications" / sc["key"] / f"{doc_type}__{variant}.pdf"
             _write(path, gen, inst, documents, issuer_records, sc["key"], sc.get("issuer_sim", {}).get(doc_type))
             files.append({"doc_type": doc_type, "file": path.relative_to(out_dir).as_posix()})
+        files_by_scenario[sc["key"]] = {f["doc_type"]: f["file"] for f in files}
         if sc.get("duplicate"):  # the same file uploaded into a second slot
             src = next(f for f in files if f["doc_type"] == sc["duplicate"]["from"])
             files = [f for f in files if f["doc_type"] != sc["duplicate"]["to"]]

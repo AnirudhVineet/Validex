@@ -17,6 +17,7 @@ class InspectionRecord(Base):
     evidence_document_id: Mapped[str | None] = mapped_column(
         ForeignKey("application_documents.id"), nullable=True
     )
+    evidence_label: Mapped[str | None] = mapped_column(String(50), nullable=True)  # see config/infrastructure.yaml
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
 
