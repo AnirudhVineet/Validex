@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     file_link_expire_seconds: int = 300
     max_upload_bytes: int = 10 * 1024 * 1024
     storage_dir: Path = DATA_DIR / "files"
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = ["http://localhost:5180"]
 
 
 settings = Settings()

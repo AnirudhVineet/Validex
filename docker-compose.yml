@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: verifyai
+      POSTGRES_PASSWORD: verifyai   # local demo database only
+      POSTGRES_DB: verifyai
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verifyai"]
+      interval: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://verifyai:verifyai@db:5432/verifyai
+      JWT_SECRET: ${JWT_SECRET:-change-me-for-anything-shared}
+      STORAGE_DIR: /data/files
+    volumes:
+      - files:/data/files
+    ports:
+      - "8010:8010"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      API_TARGET: http://backend:8010
+    ports:
+      - "5180:5180"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  files:
