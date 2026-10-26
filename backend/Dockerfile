@@ -14,5 +14,6 @@ COPY backend/ /app/backend/
 COPY seed/ /app/seed/
 
 EXPOSE 8000
+# Render (and similar hosts) set PORT; docker compose uses the 8000 default.
 # Seeding is idempotent, so running it on every start keeps "seed -> login" working.
-CMD ["sh", "-c", "python /app/seed/seed.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "python /app/seed/seed.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

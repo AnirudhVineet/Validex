@@ -1,0 +1,23 @@
+# Render blueprint for the Validex backend (hackathon prototype demo).
+# The free plan has no persistent disk: SQLite, uploads and the SYNTHETIC seed output
+# all live inside the container and are re-created by the seed on every start.
+# That keeps the demo consistent, but anything added in the UI is lost on restart/redeploy.
+services:
+  - type: web
+    name: validex-api
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AI_FALLBACK_ENABLED
+        value: "false"
+      - key: LLM_SUMMARY_ENABLED
+        value: "false"
