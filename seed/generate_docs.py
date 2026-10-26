@@ -1,0 +1,96 @@
+"""Generate SYNTHETIC documents for every seed scenario plus demo-upload files, and a manifest
+of expected findings for evaluation.
+
+Run from the repo root:  backend/.venv/Scripts/python seed/generate_docs.py
+Output (git-ignored):    seed/output/
+  applications/<scenario>/<doc_type>__<variant>.pdf
+  demo_upload/<doc_type>__<variant>.pdf      (for the demo applicant to upload live)
+  manifest.json                              (truth values + expected rule ids per document / scenario)
+  mock_issuer_data.json                      (MOCK issuer records for QR references; used in Phase 2)
+"""
+import json
+import random
+import sys
+from datetime import date
+from pathlib import Path
+
+SEED_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SEED_DIR.parent))
+
+from seed.data import DEMO_UPLOADS, SCENARIOS, build_institutions  # noqa: E402
+from seed.docgen import InstitutionData, make_document  # noqa: E402
+
+OUTPUT_DIR = SEED_DIR / "output"
+
+
+def _inst_data(inst: dict) -> InstitutionData:
+    return InstitutionData(inst["name"], inst["address"], inst["aicte_ref"], inst["state"], inst["faculty_count"])
+
+
+def _write(path: Path, gen, inst: dict, manifest: list, issuer_records: dict, scenario: str | None) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(gen.pdf)
+    manifest.append({
+        "file": path.relative_to(OUTPUT_DIR).as_posix(), "scenario": scenario,
+        "institution_ref": inst["aicte_ref"], "doc_type": gen.doc_type, "variant": gen.variant,
+        "truth": gen.truth, "expected_rule_ids": gen.expected_rule_ids, "qr_ref": gen.qr_ref,
+    })
+    if gen.qr_ref:
+        # The MOCK issuer holds what it actually issued: the real institution name, even when the
+        # document copy shows another name (name_mismatch variant).
+        issuer_records[gen.qr_ref] = {
+            "issuer": gen.issuer, "is_mock": True, "institution_name": inst["name"],
+            **{k: v for k, v in gen.truth.items() if k in ("certificate_number", "issue_date", "expiry_date")},
+        }
+
+
+def generate_all(today: date | None = None, out_dir: Path = OUTPUT_DIR) -> dict:
+    today = today or date.today()
+    institutions = build_institutions()
+    documents: list[dict] = []
+    issuer_records: dict = {}
+    applications = []
+    rng = random.Random(2026)
+
+    for sc in SCENARIOS:
+        inst = institutions[sc["institution"]]
+        files = []
+        for doc_type, variant in sc["docs"].items():
+            faculty = None
+            if doc_type == "faculty_list" and sc.get("faculty_ratio"):
+                faculty = round(inst["faculty_count"] * sc["faculty_ratio"])
+            gen = make_document(doc_type, variant, _inst_data(inst), today, rng, faculty_count=faculty)
+            path = out_dir / "applications" / sc["key"] / f"{doc_type}__{variant}.pdf"
+            _write(path, gen, inst, documents, issuer_records, sc["key"])
+            files.append({"doc_type": doc_type, "file": path.relative_to(out_dir).as_posix()})
+        form_data = {}
+        if sc.get("form_data_increase"):
+            form_data["requested_intake"] = inst["approved_intake"] + sc["form_data_increase"]
+        applications.append({"scenario": sc["key"], "institution_ref": inst["aicte_ref"],
+                             "category": sc["category"], "form_data": form_data, "documents": files,
+                             "target_status": sc["target"], "expected_rule_ids": sc["expected"],
+                             "note": sc.get("note")})
+
+    demo = institutions[0]
+    for doc_type, variant in DEMO_UPLOADS:
+        gen = make_document(doc_type, variant, _inst_data(demo), today, rng)
+        _write(out_dir / "demo_upload" / f"{doc_type}__{variant}.pdf", gen, demo, documents, issuer_records, None)
+
+    manifest = {
+        "synthetic": True,
+        "notice": "All documents are SYNTHETIC and generated for prototype testing.",
+        "generated_for_date": today.isoformat(),
+        "documents": documents,
+        "applications": applications,
+    }
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (out_dir / "mock_issuer_data.json").write_text(
+        json.dumps({"is_mock": True, "records": issuer_records}, indent=2), encoding="utf-8")
+    return manifest
+
+
+if __name__ == "__main__":
+    m = generate_all()
+    print(f"Generated {len(m['documents'])} SYNTHETIC documents for {len(m['applications'])} scenarios "
+          f"in {OUTPUT_DIR}")
