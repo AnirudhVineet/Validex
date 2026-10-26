@@ -3,6 +3,7 @@ import { api, openDocument } from "../api/client.js";
 import { Badge, Button, ErrorText } from "./ui.jsx";
 
 function FieldRow({ field, canCorrect, onChanged }) {
+  const isAi = field.source === "ai_vision";
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(field.value || "");
   const [reason, setReason] = useState("");
@@ -43,9 +44,16 @@ function FieldRow({ field, canCorrect, onChanged }) {
       </td>
       <td className="py-1 pr-3 text-xs text-slate-500">
         {field.source} · {Math.round(field.confidence * 100)}%{field.page ? ` · p${field.page}` : ""}
+        {isAi && <span className="ml-1 rounded bg-violet-100 px-1 text-violet-800">AI-read suggestion</span>}
         {field.needs_confirmation && <span className="ml-1 text-amber-700">needs confirmation</span>}
       </td>
       <td className="py-1 text-right">
+        {canCorrect && !editing && isAi && (
+          <button className="mr-2 text-xs font-medium text-violet-700 hover:underline"
+            onClick={() => { setValue(field.value || ""); setReason("Checked against the document image"); setEditing(true); }}>
+            Confirm
+          </button>
+        )}
         {canCorrect && !editing && (
           <button className="text-xs text-sky-700 hover:underline" onClick={() => setEditing(true)}>Correct</button>
         )}

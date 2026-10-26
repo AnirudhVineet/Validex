@@ -153,12 +153,26 @@ cd backend
 | Cross-application matches, expiry forecast, senior overview, deficiency letter (template) | Real |
 | Inspector notes / evidence and infrastructure advisory | Real; advisory = evidence present + labels read, no measurement |
 | Time-saved counter | ESTIMATE from stated assumptions (shown on screen), not measured |
-| LLM case summary (Claude, `claude-opus-5-5`) | Optional, OFF by default; cites finding ids; never used for validation |
+| AI fallback reader for poor scans (Groq vision, `qwen/qwen3.8-27b`) | Optional, OFF by default; suggestions only - rules ignore them until an officer confirms |
+| AI case summary (Groq, `openai/gpt-oss-120b`) | Optional, OFF by default; cites finding ids; never used for validation |
 
-### Optional LLM summary
-Set `LLM_SUMMARY_ENABLED=true` and provide Anthropic credentials (`ANTHROPIC_API_KEY`) in the backend environment.
-The call uses structured JSON output and server-side refusal fallbacks (`fallbacks: "default"`). Only stored
-finding text is sent (synthetic data); without credentials the panel shows "Summary unavailable".
+### Optional AI features (Groq)
+Create a file named `.env` in the repo root (it is git-ignored):
+```
+GROQ_API_KEY=gsk_your_key_here
+AI_FALLBACK_ENABLED=true
+LLM_SUMMARY_ENABLED=true
+```
+then `docker compose up -d` (or `./scripts/reset-demo.sh`). Without the key everything else works; the AI panels
+say "unavailable".
+- **AI fallback reader:** when OCR misses a field, is unsure, or is not installed, page 1 of the scan is sent to the
+  Groq vision model, which returns the printed value of each field (or null). Values appear as **AI-read
+  suggestion** with confidence 0.60; the region is highlighted when the same text is found by OCR. **No rule and no
+  issuer comparison uses them** until an officer clicks **Confirm** (or **Correct**), which is audited
+  (`field.confirmed`). Until then the affected checks show as "awaits officer confirmation".
+- **AI case summary:** reads only stored findings and must cite their ids; uncited points are dropped.
+- Both use Groq structured outputs (strict JSON schema). Enabling them sends synthetic page images / finding text to
+  Groq. Model ids can be changed with `VISION_MODEL` / `SUMMARY_MODEL` (Groq's preview models change often).
 
 ## Security notes (only what is implemented)
 - Passwords hashed with bcrypt. JWT (HS256) with an 8 hour expiry; set `JWT_SECRET` for any shared deployment.

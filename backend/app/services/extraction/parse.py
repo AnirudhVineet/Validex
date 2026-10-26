@@ -38,6 +38,7 @@ class ParsedField:
     page: int | None
     bbox: list[float] | None
     needs_confirmation: bool
+    source: str | None = None  # None = same as the document's extraction method; "ai_vision" for AI suggestions
 
 
 def group_lines(words: list[Word]) -> list[Line]:

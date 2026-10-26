@@ -27,6 +27,8 @@ class DocView:
     fields: dict[str, FieldView] = field(default_factory=dict)
     sha256: str = ""
     analysis: dict = field(default_factory=dict)
+    # AI fallback suggestions awaiting officer confirmation. NOT in `fields`, so no rule uses them.
+    ai_pending: dict[str, FieldView] = field(default_factory=dict)
 
     @property
     def qr_ref(self) -> str | None:

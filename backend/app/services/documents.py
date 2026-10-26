@@ -80,7 +80,7 @@ def correct_field(db: Session, user: User, field: ExtractedField, value: str, re
         raise forbidden("Only scrutiny officers and senior authorities can correct fields")
     if len(reason.strip()) < 5:
         raise HTTPException(status.HTTP_409_CONFLICT, "A reason (at least 5 characters) is required")
-    old = field.value
+    old, old_source = field.value, field.source
     masker = audit.mask if field.field_name in IDENTIFIER_FIELDS else (lambda v: v)
     field.value = value.strip()
     field.source = ExtractionSource.manual
@@ -88,8 +88,9 @@ def correct_field(db: Session, user: User, field: ExtractedField, value: str, re
     field.needs_confirmation = False
     field.corrected_by = user.id
     field.corrected_at = utcnow()
-    audit.log(db, user.id, "field.corrected", "extracted_field", field.id,
-              {"document_id": field.document_id, "field_name": field.field_name,
+    confirmed_ai = old_source == ExtractionSource.ai_vision and old == field.value
+    audit.log(db, user.id, "field.confirmed" if confirmed_ai else "field.corrected", "extracted_field", field.id,
+              {"document_id": field.document_id, "field_name": field.field_name, "old_source": old_source.value,
                "old_value": masker(old), "new_value": masker(field.value), "reason": reason.strip()})
     return field
 

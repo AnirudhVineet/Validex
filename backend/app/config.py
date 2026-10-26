@@ -23,9 +23,12 @@ class Settings(BaseSettings):
     # MOCK issuer records, generated with the synthetic documents by seed/generate_docs.py.
     mock_issuer_data_path: Path = BACKEND_DIR.parent / "seed" / "output" / "mock_issuer_data.json"
     pending_verification_alert_hours: int = 24
-    # Optional LLM case summary. OFF by default; never used for validation.
-    llm_summary_enabled: bool = False
-    llm_model: str = "claude-opus-5-5"
+    # Optional AI features via Groq. Both OFF by default; neither decides compliance.
+    groq_api_key: str = ""                      # env GROQ_API_KEY
+    llm_summary_enabled: bool = False           # case summary that cites finding ids
+    summary_model: str = "openai/gpt-oss-120b"
+    ai_fallback_enabled: bool = False           # AI reader for poor scans; values need officer confirmation
+    vision_model: str = "qwen/qwen3.8-27b"
     # Time-saved estimate: ASSUMPTIONS shown on screen, not measurements.
     minutes_saved_per_document: int = 6
     minutes_saved_per_verification: int = 4

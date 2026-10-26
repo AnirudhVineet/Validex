@@ -19,7 +19,7 @@ from rapidfuzz import fuzz
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.enums import VerificationStatus
+from app.enums import ExtractionSource, VerificationStatus
 from app.models import Application, ApplicationDocument, ExtractedField, VerificationRequest
 from app.services import audit
 from app.services.rules.checks import normalize_text
@@ -31,7 +31,9 @@ NAME_MATCH_THRESHOLD = 90
 
 def _submitted_values(db: Session, doc: ApplicationDocument) -> dict:
     rows = db.execute(select(ExtractedField).where(ExtractedField.document_id == doc.id)).scalars()
-    return {f.field_name: f.value for f in rows if f.field_name in COMPARED_FIELDS and f.value}
+    # Unconfirmed AI-read suggestions are never compared (they are not evidence until an officer confirms).
+    return {f.field_name: f.value for f in rows
+            if f.field_name in COMPARED_FIELDS and f.value and f.source != ExtractionSource.ai_vision}
 
 
 def _reference(doc: ApplicationDocument, submitted: dict) -> tuple[str | None, str]:

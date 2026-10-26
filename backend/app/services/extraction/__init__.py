@@ -8,9 +8,11 @@ page, bbox, confidence and source. If OCR is needed but unavailable, the documen
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.enums import DocumentStatus, ExtractionSource
 from app.models import ApplicationDocument, ExtractedField
 from app.services import audit, storage
+from app.services.extraction import ai_reader
 from app.services.extraction.parse import classify, extract_fields, group_lines
 from app.services.extraction.words import ocr_available, ocr_image_words, ocr_pdf_words, pdf_text_words
 from app.services.rules.loader import load_doc_types
@@ -39,13 +41,36 @@ def _read_words(path, mime_type: str):
     return ocr_image_words(path), "ocr"
 
 
-def extract_file(path, mime_type: str, doc_type: str) -> tuple[str, str | None, dict]:
+def extract_file(path, mime_type: str, doc_type: str, ai_caller=None) -> tuple[str, str | None, dict]:
     """Extract one file without touching the database: (method, classified_type, {field: ParsedField}).
-    Raises ExtractionFailed when OCR is needed but unavailable. Used by the upload path and the evaluation."""
+
+    Scans go through OCR; if OCR misses fields, is unsure, or is not installed, and the AI fallback is
+    enabled, the Groq vision model suggests values (source ai_vision, always needs confirmation).
+    Raises ExtractionFailed when nothing could read the document."""
     doc_types = load_doc_types()
-    words, method = _read_words(path, mime_type)
+    cfg = doc_types.get(doc_type, {})
+    try:
+        words, method = _read_words(path, mime_type)
+    except ExtractionFailed:
+        if not settings.ai_fallback_enabled:
+            raise
+        words, method = [], "none"  # OCR unavailable: let the AI reader try
     lines = group_lines(words)
-    parsed = extract_fields(lines, doc_types.get(doc_type, {}), from_ocr=(method == "ocr"))
+    parsed = extract_fields(lines, cfg, from_ocr=(method == "ocr")) if words else {}
+
+    if method in ("ocr", "none") and settings.ai_fallback_enabled and ai_reader.needs_help(parsed, cfg):
+        try:
+            values = ai_reader.read_page(path, mime_type, cfg.get("label", doc_type),
+                                         ai_reader.wanted_fields(cfg), caller=ai_caller)
+        except ai_reader.LLMUnavailable as exc:
+            if method == "none":
+                raise ExtractionFailed(f"OCR is not installed and the AI fallback reader is unavailable "
+                                       f"({exc}). Manual review needed.") from exc
+        else:
+            if ai_reader.merge(parsed, values, lines):
+                method = "ocr+ai_vision" if method == "ocr" else "ai_vision"
+    if method == "none":
+        raise ExtractionFailed("Neither OCR nor the AI fallback reader could read this document. Manual review needed.")
     return method, classify(lines, doc_types), parsed
 
 
@@ -62,17 +87,20 @@ def extract_document(db: Session, doc: ApplicationDocument, actor: str) -> Appli
         doc.status = DocumentStatus.failed
         doc.extraction_error = f"Could not read document ({type(exc).__name__}). Manual review needed."
     else:
-        source = ExtractionSource.ocr if method == "ocr" else ExtractionSource.pdf_text
+        source = ExtractionSource.pdf_text if method == "pdf_text" else ExtractionSource.ocr
         for pf in parsed.values():
             db.add(ExtractedField(document_id=doc.id, field_name=pf.name, value=pf.value,
                                   confidence=pf.confidence, page=pf.page, bbox=pf.bbox,
-                                  source=source, needs_confirmation=pf.needs_confirmation))
+                                  source=ExtractionSource(pf.source) if pf.source else source,
+                                  needs_confirmation=pf.needs_confirmation))
         doc.status, doc.extraction_method, doc.extraction_error = DocumentStatus.extracted, method, None
 
     db.flush()
     if doc.status == DocumentStatus.extracted:
         audit.log(db, actor, "document.extracted", "document", doc.id,
                   {"method": doc.extraction_method, "fields": len(parsed),
+                   "ai_suggested_fields": sorted(n for n, pf in parsed.items() if pf.source == "ai_vision"),
+                   "ai_model": settings.vision_model if "ai_vision" in (doc.extraction_method or "") else None,
                    "classified_type": doc.classified_type})
     else:
         audit.log(db, actor, "document.extraction_failed", "document", doc.id,

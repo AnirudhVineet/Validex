@@ -205,6 +205,7 @@ Login: `officer@validex.demo`
 | **Re-run validation** | Button on the findings card | New run with the current rules; earlier runs are kept; findings you already reviewed keep their status ("carried over"). |
 | **Issuer verification: submitted value vs source value** | Card below findings | Per document: MOCK issuer, reference (from QR code or printed number), status, and a field table (submitted / source / matches or **differs**). **Re-verify (MOCK)** asks again and re-runs validation. |
 | **Documents and extracted values** | Card at the bottom | Same as the applicant view plus **Correct** on every value: enter the new value + reason. Source becomes `manual`, the change is audited (IDs masked). Re-run validation afterwards. |
+| **Confirm AI-read values** (only if the AI fallback is on) | Values marked **AI-read suggestion** have a **Confirm** button | The AI suggested them because OCR struggled. Rules ignore them until you confirm (or correct) against the document; then **Re-run validation**. |
 
 **Case review page** (right column)
 | Feature | What it does |
@@ -361,7 +362,7 @@ All rules are ILLUSTRATIVE (`backend/config/rules/core.yaml`). "Applicant" = vis
 | Port 8000 or 5173 busy | Stop the other program, or `docker compose down` and start again |
 | Issuer shows *mismatch* on dates for a demo file you just uploaded | Demo files are from a different day than the database. Run `./scripts/reset-demo.sh` (it refreshes both). |
 | Scanned file shows `failed` / checks that could not complete | OCR not available: you are running locally without Tesseract. Use Docker. |
-| AI summary says "disabled" | Expected. Set `LLM_SUMMARY_ENABLED=true` and `ANTHROPIC_API_KEY` for the backend to try it. |
+| AI summary / AI reader says "disabled" or "unavailable" | Expected without a key. Add `GROQ_API_KEY`, `AI_FALLBACK_ENABLED=true`, `LLM_SUMMARY_ENABLED=true` to a `.env` file in the repo root, then `docker compose up -d`. |
 | Something odd after many clicks | `./scripts/reset-demo.sh` returns to the clean seeded state |
 
 ---

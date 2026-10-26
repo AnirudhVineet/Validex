@@ -20,7 +20,10 @@ services:
       DATABASE_URL: postgresql+psycopg2://validex:validex@db:5432/validex
       JWT_SECRET: ${JWT_SECRET:-change-me-for-anything-shared}
       STORAGE_DIR: /data/files
-      LLM_SUMMARY_ENABLED: ${LLM_SUMMARY_ENABLED:-false}  # optional; also needs Anthropic credentials
+      # Optional AI features (Groq). Put these in a .env file next to this file; both are off by default.
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      AI_FALLBACK_ENABLED: ${AI_FALLBACK_ENABLED:-false}
+      LLM_SUMMARY_ENABLED: ${LLM_SUMMARY_ENABLED:-false}
     volumes:
       - files:/data/files
     ports:

@@ -1,4 +1,4 @@
-"""Optional evidence-grounded case summary (LLM). DISABLED by default.
+"""Optional evidence-grounded case summary (LLM via Groq). DISABLED by default.
 
 - Never part of validation: it reads stored findings and writes nothing but an audit event.
 - Grounded: the model sees only the findings list; every point must cite finding ids.
@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models import Application, Finding, Institution, User
 from app.services import audit
+from app.services.llm import LLMUnavailable, chat_json
 from app.services.validation import latest_run
 
 SYSTEM = (
@@ -55,23 +56,9 @@ def _findings_payload(findings: list[Finding]) -> list[dict]:
 
 
 def _call_model(findings_json: str) -> dict | None:
-    """Call Claude with structured output. Returns the parsed JSON, or None on refusal."""
-    import anthropic
-
-    client = anthropic.Anthropic()  # credentials from the environment (ANTHROPIC_API_KEY, ...)
-    response = client.beta.messages.create(
-        model=settings.llm_model,
-        max_tokens=16000,
-        betas=["server-side-fallback-2026-07-01"],
-        fallbacks="default",  # retry on a fallback model if a safety classifier declines
-        system=SYSTEM,
-        output_config={"effort": "medium", "format": {"type": "json_schema", "schema": SCHEMA}},
-        messages=[{"role": "user", "content": f"Findings (JSON):\n{findings_json}"}],
-    )
-    if response.stop_reason == "refusal":
-        return None
-    text = next((b.text for b in response.content if b.type == "text"), "")
-    return json.loads(text)
+    """Ask the Groq text model for a schema-constrained summary."""
+    return chat_json(settings.summary_model, SYSTEM, f"Findings (JSON):\n{findings_json}",
+                     "case_summary", SCHEMA)
 
 
 def ground(raw: dict | None, valid_ids: set[str]) -> dict:
@@ -91,24 +78,27 @@ def ground(raw: dict | None, valid_ids: set[str]) -> dict:
 
 
 def summarize(db: Session, user: User, app: Application, caller=None) -> dict:
-    """caller: injectable model call (tests); defaults to the real Claude call."""
+    """caller: injectable model call (tests); defaults to the real Groq call."""
     if not settings.llm_summary_enabled:
         return {"enabled": False, "insufficient_evidence": True, "points": [], "dropped_points": 0,
-                "model": None, "note": "LLM summary is disabled (set LLM_SUMMARY_ENABLED=true to enable)."}
+                "model": None, "note": "AI summary is disabled (set LLM_SUMMARY_ENABLED=true and GROQ_API_KEY)."}
     run = latest_run(db, app, include_precheck=False)
     findings = list(db.execute(select(Finding).where(Finding.validation_run_id == run.id)).scalars()) if run else []
     if not findings:
         return {"enabled": True, "insufficient_evidence": True, "points": [], "dropped_points": 0,
-                "model": settings.llm_model, "note": "No findings to summarise."}
+                "model": settings.summary_model, "note": "No findings to summarise."}
     inst = db.get(Institution, app.institution_id)
     payload = json.dumps({"institution": inst.name, "findings": _findings_payload(findings)}, indent=1)
     try:
         raw = (caller or _call_model)(payload)
+    except LLMUnavailable as exc:
+        return {"enabled": True, "insufficient_evidence": True, "points": [], "dropped_points": 0,
+                "model": settings.summary_model, "note": f"Summary unavailable: {exc}."}
     except Exception as exc:  # noqa: BLE001 - the summary is optional; never break the page
         return {"enabled": True, "insufficient_evidence": True, "points": [], "dropped_points": 0,
-                "model": settings.llm_model, "note": f"Summary unavailable ({type(exc).__name__})."}
+                "model": settings.summary_model, "note": f"Summary unavailable ({type(exc).__name__})."}
     result = ground(raw, {f.id for f in findings})
     audit.log(db, user.id, "summary.generated", "application", app.id, {
-        "model": settings.llm_model, "run_id": run.id, "points": len(result["points"]),
+        "model": settings.summary_model, "run_id": run.id, "points": len(result["points"]),
         "dropped_points": result["dropped_points"], "insufficient_evidence": result["insufficient_evidence"]})
-    return {"enabled": True, "model": settings.llm_model, **result}
+    return {"enabled": True, "model": settings.summary_model, **result}

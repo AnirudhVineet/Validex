@@ -9,7 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.enums import ApplicationStatus, FindingStatus, Role
+from app.enums import ApplicationStatus, ExtractionSource, FindingStatus, Role
 from app.models import Application, ExtractedField, Finding, Institution, User, ValidationRun
 from app.models.base import utcnow
 from app.services import audit
@@ -36,12 +36,16 @@ def build_context(db: Session, app: Application, today: date) -> tuple[Validatio
     docs: dict[str, DocView] = {}
     current = current_documents(db, app)
     for d in current:
-        fields = db.execute(select(ExtractedField).where(ExtractedField.document_id == d.id)).scalars()
+        fields = list(db.execute(select(ExtractedField).where(ExtractedField.document_id == d.id)).scalars())
         docs[d.doc_type] = DocView(
             id=d.id, doc_type=d.doc_type, status=d.status.value, classified_type=d.classified_type,
             extraction_error=d.extraction_error, sha256=d.sha256, analysis=d.analysis or {},
+            ai_pending={f.field_name: FieldView(f.field_name, f.value, f.confidence, f.page, f.bbox,
+                                                f.source.value, True)
+                        for f in fields if f.source == ExtractionSource.ai_vision},
             fields={f.field_name: FieldView(f.field_name, f.value, f.confidence, f.page, f.bbox,
-                                            f.source.value, f.needs_confirmation) for f in fields},
+                                            f.source.value, f.needs_confirmation)
+                    for f in fields if f.source != ExtractionSource.ai_vision},
         )
     ctx = ValidationContext(
         institution=InstitutionView(inst.name, inst.address, inst.approved_intake, inst.faculty_count,

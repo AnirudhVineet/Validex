@@ -112,6 +112,11 @@ def required_fields_present(ctx: ValidationContext, params: FieldsParams) -> Che
         for name in params.fields[doc.doc_type]:
             if doc.value(name) is not None:
                 continue
+            if name in doc.ai_pending:  # suggested by the AI reader: wait for the officer, don't guess
+                result.incomplete.append({"document_id": doc.id, "doc_type": doc.doc_type,
+                                          "reason": f"{name.replace('_', ' ')} was read by the AI fallback "
+                                                    "and awaits officer confirmation"})
+                continue
             nice = name.replace("_", " ")
             result.findings.append(FindingDraft(
                 title=f"{ctx.label(doc.doc_type)}: {nice} not found",
@@ -293,6 +298,14 @@ def no_open_deficiency(ctx: ValidationContext, _: NoParams) -> CheckResult:
 def low_confidence_fields(ctx: ValidationContext, _: NoParams) -> CheckResult:
     result = CheckResult()
     for doc in _extracted_docs(ctx, result):
+        for f in doc.ai_pending.values():
+            result.findings.append(FindingDraft(
+                title=f"{ctx.label(doc.doc_type)}: confirm AI-read {f.name.replace('_', ' ')}",
+                explanation="OCR could not read this reliably, so the AI fallback reader suggested a value. "
+                            "No check uses it until an officer confirms or corrects it against the document.",
+                document_id=doc.id, found_value=f.value, expected_value="officer-confirmed value",
+                evidence=f.evidence(),
+            ))
         for f in doc.fields.values():
             if f.needs_confirmation:
                 result.findings.append(FindingDraft(

@@ -68,6 +68,7 @@ class ExtractionSource(str, Enum):
     pdf_text = "pdf_text"
     ocr = "ocr"
     manual = "manual"
+    ai_vision = "ai_vision"  # AI fallback reader suggestion; ignored by rules until an officer confirms
 
 
 class RuleSetKind(str, Enum):

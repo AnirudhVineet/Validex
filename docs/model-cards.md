@@ -84,16 +84,25 @@ run it inside Docker so OCR is included).
 - Deterministic; no fuzzy matching across institutions. False-positive sources: shared campus land,
   faculty who moved, template-issued certificates. Reported as preliminary indicators only.
 
-## 10. Optional LLM case summary (off by default)
+## 10. Optional AI fallback reader for poor scans (off by default)
+- **Purpose:** suggest field values when OCR misses a field, is unsure (< 0.85), or is not installed.
+- **Model:** Groq vision model `qwen/qwen3.8-27b` (preview), strict JSON schema, temperature 0; page 1 as an image.
+- **Safeguards:** values are stored as `ai_vision` with confidence 0.60 and `needs_confirmation`; no rule and no
+  issuer comparison uses them until an officer confirms or corrects them (audited). Digital PDFs never call it.
+  Null means "not readable" and stays missing. Region highlighting only when OCR finds the same text.
+- **Limits:** not evaluated against a live key in this repo (calls are stubbed in tests). Vision models can misread
+  digits or invent plausible text - which is exactly why confirmation is required. Preview models may be retired.
+
+## 11. Optional AI case summary (off by default)
 - **Purpose:** a short readable digest of already-computed findings for the officer.
-- **Model:** Claude (`claude-opus-5-5`), structured JSON output, server-side refusal fallbacks.
+- **Model:** Groq `openai/gpt-oss-120b`, strict JSON schema output.
 - **Grounding:** input is the stored findings only; every output point must cite finding ids; points citing
   unknown ids are dropped; empty / declined -> "insufficient evidence". Never stored as a finding and never
   influences validation, statuses or the priority score.
 - **Limits:** can still paraphrase a finding imperfectly - officers read the cited findings, not the summary.
   Not evaluated on real data.
 
-## 11. Review-priority score
+## 12. Review-priority score
 - Weighted count of open findings (critical 25, high 12, medium 5, low 2), +8 per anomaly indicator,
   +6 per verification issue, +3 per document with incomplete checks, +1 per day waiting (max 10); capped at 100.
 - A queue-ordering aid with its full breakdown shown. **Not a probability** and not a compliance judgement.
