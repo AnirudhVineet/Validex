@@ -23,4 +23,10 @@ until curl -sf http://localhost:5173/api/health >/dev/null 2>&1; do
   i=$((i + 1)); [ "$i" -gt 60 ] && { echo "Backend did not come up; see: docker compose logs backend"; exit 1; }
   sleep 3
 done
+# Copy the demo upload files generated inside the container, so their dates and certificate numbers match
+# the MOCK issuer records the backend just generated (both are created relative to today's date).
+rm -rf seed/output/demo_upload
+mkdir -p seed/output
+MSYS_NO_PATHCONV=1 docker compose cp backend:/app/seed/output/demo_upload seed/output/demo_upload >/dev/null
+echo "Demo upload files: seed/output/demo_upload/"
 echo "Ready: http://localhost:5173  (all demo accounts use password demo1234)"

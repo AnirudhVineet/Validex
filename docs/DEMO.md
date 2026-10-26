@@ -15,7 +15,7 @@ Everything on screen is SYNTHETIC; every issuer source is MOCK.
 | 3:05 | **Rule edit as admin** - `admin@validex.demo` | **Rule editor** -> change `within_days: 90` to `30` -> Validate -> reason -> Save as new version -> **Re-run on open cases**. "Rules are versioned YAML; every run records the version; old results are kept." Then **Audit and users** -> **Verify chain**: "tamper-evident hash chain". |
 | 3:35 | **Impact + limitations** | Senior overview: ageing, common findings, expiry forecast, time saved (point at the stated ASSUMPTION). Limits: synthetic data, MOCK issuers, illustrative rules, OCR weaker on poor scans, ELA weak on text documents (see `docs/eval-results.md`). |
 
-Fallback if something breaks live: every step also exists pre-seeded (Mockingnagar = altered NOC, Draftabad = pending issuer,
+Fallback if something breaks live: every step also exists pre-seeded (Mockingnagar = altered NOC, Specimen Kunj = pending issuer,
 Trialwadi = cross-application, Stubwadi = returned for correction, Synthpur = escalated for the inspector view).
 
 ---

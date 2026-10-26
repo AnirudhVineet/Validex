@@ -43,7 +43,7 @@ Every write that matters goes through `audit.log()`. The LLM (if enabled) never 
 ./scripts/reset-demo.sh --local    # local SQLite dev
 .\scripts\reset-demo.ps1          # Windows PowerShell equivalent (-Build, -Local)
 ```
-Then follow `docs/DEMO.md` (4-minute script + judge Q&A).
+Then follow `docs/DEMO.md` (4-minute script + judge Q&A). Full feature guide with every account: `docs/DEMO_GUIDE.md`.
 
 ## Evaluation
 ```bash

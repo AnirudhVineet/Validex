@@ -18,4 +18,9 @@ Write-Host "Waiting for the backend to seed..."
 for ($i = 0; $i -lt 60; $i++) {
     try { Invoke-WebRequest -UseBasicParsing http://localhost:5173/api/health | Out-Null; break } catch { Start-Sleep 3 }
 }
+# Copy the container's demo upload files so they match the MOCK issuer records generated today.
+if (Test-Path seed\output\demo_upload) { Remove-Item -Recurse -Force seed\output\demo_upload }
+New-Item -ItemType Directory -Force seed\output | Out-Null
+docker compose cp backend:/app/seed/output/demo_upload seed/output/demo_upload | Out-Null
+Write-Host "Demo upload files: seed\output\demo_upload\"
 Write-Host "Ready: http://localhost:5173  (all demo accounts use password demo1234)"
