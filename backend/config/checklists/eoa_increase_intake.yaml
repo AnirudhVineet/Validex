@@ -1,0 +1,33 @@
+# ILLUSTRATIVE checklist. NOT taken from the official AICTE Approval Process Handbook.
+# Must be checked against the current handbook before any real use.
+illustrative: true
+notice: "Illustrative checklist for the prototype. Not the official AICTE requirement list."
+name: eoa_increase_intake
+title: "Extension of Approval: increase in intake (illustrative)"
+version: 1
+form_fields:
+  - name: requested_intake
+    label: Requested total intake
+    type: integer
+    required: true
+items:
+  - doc_type: fire_noc
+    requirement: required
+    description: Valid fire safety NOC for the institution premises.
+  - doc_type: affidavit
+    requirement: required
+    description: Affidavit / undertaking signed by the institution head.
+  - doc_type: land_document
+    requirement: required
+    description: Land ownership or lease registration document.
+  - doc_type: faculty_list
+    requirement: required
+    description: Current list of faculty with IDs and designations.
+  - doc_type: accreditation_certificate
+    requirement: conditional
+    description: Required when the requested increase is more than 60 seats.
+    # Conditions compare a computed value with a constant. Supported ops: gt, gte, lt, lte, eq, ne.
+    condition:
+      value_of: intake_increase    # requested_intake - institution.approved_intake
+      op: gt
+      value: 60

@@ -1,0 +1,139 @@
+# ILLUSTRATIVE validation rules. NOT taken from the official AICTE Approval Process Handbook.
+# Every rule is deterministic. `condition.check` names a Python check in
+# app/services/rules/checks.py; `condition.params` are passed to it.
+illustrative: true
+notice: "Illustrative rules for the prototype. Not official AICTE criteria."
+name: core
+version: 1
+rules:
+  - id: COMP-001
+    description: Every required checklist document is uploaded.
+    category: completeness
+    severity: critical
+    condition: {check: required_document_present}
+    recommended_action: Upload the missing document in the checklist slot.
+    version: 1
+    visible_to_applicant: true
+
+  - id: COMP-002
+    description: Key fields can be read from each uploaded document.
+    category: completeness
+    severity: high
+    condition:
+      check: required_fields_present
+      params:
+        fields:
+          fire_noc: [institution_name, certificate_number, issuing_authority, issue_date, expiry_date]
+          affidavit: [institution_name, issue_date]
+          accreditation_certificate: [institution_name, certificate_number, issue_date, expiry_date]
+          land_document: [institution_name, certificate_number, issue_date, address]
+          faculty_list: [institution_name, faculty_count]
+    recommended_action: Upload a complete, legible copy where these fields are clearly printed.
+    version: 1
+    visible_to_applicant: true
+
+  - id: COMP-003
+    description: The uploaded file matches the checklist slot it was uploaded to.
+    category: completeness
+    severity: medium
+    condition: {check: document_type_matches}
+    recommended_action: Check that the right file was uploaded to this slot.
+    version: 1
+    visible_to_applicant: true
+
+  - id: EXP-001
+    description: Documents with an expiry date are still valid on the scrutiny date.
+    category: expiry
+    severity: critical
+    condition: {check: document_not_expired}
+    recommended_action: Upload a currently valid (renewed) document.
+    version: 1
+    visible_to_applicant: true
+
+  - id: EXP-002
+    description: Documents expiring soon are flagged for renewal.
+    category: expiry
+    severity: low
+    condition: {check: expiring_soon, params: {within_days: 90}}
+    recommended_action: Plan renewal; the document expires within the review window.
+    version: 1
+    visible_to_applicant: true
+
+  - id: DATE-001
+    description: Issue date is not in the future and is before the expiry date.
+    category: consistency
+    severity: high
+    condition: {check: valid_dates}
+    recommended_action: Verify the dates printed on the document.
+    version: 1
+    visible_to_applicant: true
+
+  - id: FMT-001
+    description: Certificate / registration numbers follow the expected format.
+    category: consistency
+    severity: medium
+    condition:
+      check: identifier_format
+      params:
+        patterns:
+          fire_noc: "^FNOC-[0-9]{4}-[0-9]{6}$"
+          accreditation_certificate: "^ACC-[A-Z]{2,4}-[0-9]{6}$"
+          land_document: "^LND-[A-Z]{2}-[0-9]{4}-[0-9]{5}$"
+          affidavit: "^AFF-[0-9]{8}$"
+    recommended_action: Check the certificate number against the original document.
+    version: 1
+    visible_to_applicant: true
+
+  - id: CONS-001
+    description: Institution name on each document matches the institute record.
+    category: consistency
+    severity: high
+    condition: {check: name_matches_record, params: {threshold: 88}}
+    recommended_action: Confirm the document belongs to this institution; explain any name change.
+    version: 1
+    visible_to_applicant: true
+
+  - id: CONS-002
+    description: Address on each document matches the institute record.
+    category: consistency
+    severity: medium
+    condition: {check: address_matches_record, params: {threshold: 80}}
+    recommended_action: Confirm the premises address; explain any relocation.
+    version: 1
+    visible_to_applicant: true
+
+  - id: CONS-003
+    description: Faculty count in the faculty list is consistent with the institute record.
+    category: consistency
+    severity: medium
+    condition: {check: faculty_count_matches_record, params: {tolerance_pct: 10}}
+    recommended_action: Reconcile the faculty list with the faculty count on record.
+    version: 1
+    visible_to_applicant: true
+
+  - id: REC-001
+    description: TER payment status on the institute record is paid.
+    category: consistency
+    severity: high
+    condition: {check: ter_payment_paid}
+    recommended_action: Complete the TER payment or upload proof of payment.
+    version: 1
+    visible_to_applicant: true
+
+  - id: REC-002
+    description: No unresolved deficiency is open on the institute record.
+    category: consistency
+    severity: medium
+    condition: {check: no_open_deficiency}
+    recommended_action: Address the deficiency noted on the institute record.
+    version: 1
+    visible_to_applicant: true
+
+  - id: EXT-001
+    description: Low-confidence extracted values need human confirmation.
+    category: completeness
+    severity: info
+    condition: {check: low_confidence_fields}
+    recommended_action: Officer to confirm or correct the extracted value against the document.
+    version: 1
+    visible_to_applicant: false

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.enums import (
     ApplicationCategory,
     ApplicationStatus,
+    DocumentStatus,
     ExtractionSource,
     FindingCategory,
     FindingStatus,
@@ -54,6 +55,16 @@ class InstitutionOut(ORMModel):
 
 
 # ---- Applications ----
+class ApplicationCreate(BaseModel):
+    category: ApplicationCategory
+    academic_year: str = Field(pattern=r"^[0-9]{4}-[0-9]{2}$", examples=["2027-28"])
+    form_data: dict = Field(default_factory=dict)
+
+
+class ApplicationUpdate(BaseModel):
+    form_data: dict
+
+
 class ApplicationOut(ORMModel):
     id: str
     institution_id: str
@@ -61,8 +72,73 @@ class ApplicationOut(ORMModel):
     academic_year: str
     status: ApplicationStatus
     current_version: int
+    form_data: dict
     created_at: datetime
     submitted_at: datetime | None
+    updated_at: datetime
+
+
+class ApplicationListItem(ApplicationOut):
+    institution_name: str
+    open_findings: int = 0
+    critical_findings: int = 0
+
+
+class ApplicationVersionOut(ORMModel):
+    version: int
+    submitted_by: str
+    submitted_at: datetime
+    snapshot: dict
+
+
+class ChecklistItemOut(BaseModel):
+    doc_type: str
+    label: str
+    description: str
+    requirement: str = Field(description="required | optional (after resolving conditionals)")
+    configured_as: str = Field(description="required | optional | conditional")
+    reason: str
+    condition_unresolved: bool
+    document_id: str | None
+    document_status: str | None
+    uploaded: bool
+
+
+class DocumentOut(ORMModel):
+    id: str
+    application_id: str
+    version: int
+    doc_type: str
+    original_filename: str
+    sha256: str
+    size_bytes: int
+    mime_type: str
+    status: DocumentStatus
+    is_current: bool
+    classified_type: str | None
+    extraction_method: str | None
+    extraction_error: str | None
+    uploaded_at: datetime
+
+
+class FileLinkOut(BaseModel):
+    url: str
+    expires_in_seconds: int
+
+
+class FieldCorrection(BaseModel):
+    value: str = Field(min_length=1)
+    reason: str = Field(min_length=5)
+
+
+class ReviewRequest(BaseModel):
+    action: str = Field(description="resolve | dismiss | escalate")
+    reason: str = Field(min_length=5)
+
+
+class DecisionRequest(BaseModel):
+    decision: str = Field(description="mark_scrutiny_complete | return_for_correction | escalate")
+    reason: str = Field(min_length=5)
 
 
 # ---- Extraction / findings ----
@@ -124,6 +200,53 @@ class VerificationResultOut(ORMModel):
     error: str | None
 
 
+class IncompleteCheck(BaseModel):
+    rule_id: str
+    document_id: str | None
+    doc_type: str | None
+    reason: str
+
+
+class ValidationRunOut(ORMModel):
+    id: str
+    application_id: str
+    application_version: int
+    rule_set_version: str
+    checklist_version: str
+    is_precheck: bool
+    status: str
+    incomplete_checks: list[IncompleteCheck]
+    started_by: str
+    started_at: datetime
+    finished_at: datetime | None
+
+
+class ReportDocument(BaseModel):
+    id: str
+    doc_type: str
+    original_filename: str
+    status: str
+    sha256: str
+    uploaded_at: datetime
+    classified_type: str | None
+    extraction_method: str | None
+    extraction_error: str | None
+    fields: list[ExtractedFieldOut]
+
+
+class ReportOut(BaseModel):
+    application: ApplicationOut
+    institution: InstitutionOut
+    run: ValidationRunOut | None
+    summary: dict[str, int]
+    findings: list[FindingOut]
+    incomplete_checks: list[IncompleteCheck]
+    checklist: list[ChecklistItemOut]
+    missing_form_fields: list[str]
+    documents: list[ReportDocument]
+    disclaimer: str
+
+
 # ---- Audit ----
 class AuditEventOut(ORMModel):
     id: int
@@ -153,7 +276,9 @@ class DashboardSummary(BaseModel):
 
 # Schemas exported to docs/schemas/*.json
 EXPORTED_SCHEMAS: list[type[BaseModel]] = [
-    LoginRequest, TokenResponse, UserOut, InstitutionOut, ApplicationOut,
-    Evidence, ExtractedFieldOut, FindingOut, VerificationResultOut,
+    LoginRequest, TokenResponse, UserOut, InstitutionOut, ApplicationCreate, ApplicationUpdate,
+    ApplicationOut, ApplicationListItem, ApplicationVersionOut, ChecklistItemOut, DocumentOut,
+    FileLinkOut, FieldCorrection, ReviewRequest, DecisionRequest, Evidence, ExtractedFieldOut,
+    FindingOut, IncompleteCheck, ValidationRunOut, ReportOut, VerificationResultOut,
     AuditEventOut, ChainVerifyResult, DashboardSummary,
 ]

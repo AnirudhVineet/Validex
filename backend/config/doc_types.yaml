@@ -1,0 +1,57 @@
+# Document types known to Validex, with the keywords used to classify them and the
+# printed labels used to locate each field. ILLUSTRATIVE: built for our SYNTHETIC documents.
+# Classification and extraction are deterministic (keywords + label matching), no LLM.
+illustrative: true
+version: 1
+
+doc_types:
+  fire_noc:
+    label: Fire Safety No Objection Certificate
+    keywords: ["fire", "no objection", "fire safety", "fire services"]
+    fields:
+      institution_name: ["name of institution", "institution name", "premises name"]
+      certificate_number: ["noc no", "noc number", "certificate no", "certificate number"]
+      issuing_authority: ["issuing authority", "issued by"]
+      issue_date: ["date of issue", "issue date", "issued on"]
+      expiry_date: ["valid until", "valid till", "valid upto", "expiry date", "date of expiry"]
+      address: ["address of premises", "address"]
+
+  affidavit:
+    label: Affidavit (undertaking by institution)
+    keywords: ["affidavit", "undertaking", "solemnly affirm", "notary"]
+    fields:
+      institution_name: ["name of institution", "institution name"]
+      certificate_number: ["affidavit no", "stamp paper no", "registration no"]
+      issuing_authority: ["attested by", "notary", "issuing authority"]
+      issue_date: ["date of affidavit", "date", "affirmed on"]
+      address: ["address"]
+
+  accreditation_certificate:
+    label: Accreditation Certificate
+    keywords: ["accreditation", "accredited", "programme", "accreditation board"]
+    fields:
+      institution_name: ["name of institution", "institution name", "awarded to"]
+      certificate_number: ["certificate no", "accreditation no", "certificate number"]
+      issuing_authority: ["issuing authority", "issued by", "accrediting body"]
+      issue_date: ["date of issue", "valid from", "issue date"]
+      expiry_date: ["valid until", "valid till", "expiry date", "valid upto"]
+
+  land_document:
+    label: Land Ownership / Lease Document
+    keywords: ["land", "registration", "sub-registrar", "survey", "lease", "sale deed"]
+    fields:
+      institution_name: ["owner", "name of owner", "lessee", "name of institution"]
+      certificate_number: ["registration no", "document no", "deed no"]
+      issuing_authority: ["registering office", "issuing authority", "registered at"]
+      issue_date: ["date of registration", "registration date", "date of issue"]
+      address: ["property address", "address of land", "address"]
+      land_area_acres: ["total area", "land area", "area"]
+
+  faculty_list:
+    label: Faculty List
+    keywords: ["faculty", "designation", "faculty id", "teaching staff"]
+    fields:
+      institution_name: ["name of institution", "institution name"]
+      issue_date: ["as on", "date"]
+    # faculty_count and faculty_ids are computed from table rows matching this pattern.
+    row_id_pattern: "FAC-[0-9]{6}"

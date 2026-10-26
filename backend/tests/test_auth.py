@@ -40,7 +40,7 @@ def test_user_list_forbidden_for_non_admin(client, auth_header, role):
 def test_user_list_allowed_for_admin(client, auth_header):
     res = client.get("/api/users", headers=auth_header(Role.admin))
     assert res.status_code == 200
-    assert len(res.json()) == len(Role)
+    assert len(res.json()) == len(Role) + 1  # + the other institution's applicant
 
 
 @pytest.mark.parametrize("role", [Role.applicant, Role.inspector])

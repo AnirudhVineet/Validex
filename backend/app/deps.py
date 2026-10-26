@@ -29,6 +29,8 @@ def get_current_user(
         claims = decode_access_token(creds.credentials)
     except jwt.InvalidTokenError:
         raise unauthorized
+    if claims.get("typ") != "access":  # e.g. a short-lived file-link token
+        raise unauthorized
     user = db.get(User, claims.get("sub"))
     if user is None or not user.is_active:
         raise unauthorized

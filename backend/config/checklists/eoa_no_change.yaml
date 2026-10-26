@@ -1,0 +1,23 @@
+# ILLUSTRATIVE checklist. NOT taken from the official AICTE Approval Process Handbook.
+# Must be checked against the current handbook before any real use.
+illustrative: true
+notice: "Illustrative checklist for the prototype. Not the official AICTE requirement list."
+name: eoa_no_change
+title: "Extension of Approval: no change (illustrative)"
+version: 1
+items:
+  - doc_type: fire_noc
+    requirement: required
+    description: Valid fire safety NOC for the institution premises.
+  - doc_type: affidavit
+    requirement: required
+    description: Affidavit / undertaking signed by the institution head.
+  - doc_type: land_document
+    requirement: required
+    description: Land ownership or lease registration document.
+  - doc_type: faculty_list
+    requirement: required
+    description: Current list of faculty with IDs and designations.
+  - doc_type: accreditation_certificate
+    requirement: optional
+    description: Programme accreditation certificate, if available.

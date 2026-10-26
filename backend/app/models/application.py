@@ -17,6 +17,8 @@ class Application(Base):
     academic_year: Mapped[str] = mapped_column(String(20))
     status: Mapped[ApplicationStatus] = enum_column(ApplicationStatus, default=ApplicationStatus.draft)
     current_version: Mapped[int] = mapped_column(Integer, default=1)
+    # Applicant-entered form values, e.g. {"requested_intake": 360}
+    form_data: Mapped[dict] = mapped_column(JSON, default=dict)
     created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
     submitted_at: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -49,6 +51,11 @@ class ApplicationDocument(Base):
     mime_type: Mapped[str] = mapped_column(String(100))
     storage_path: Mapped[str] = mapped_column(String(500))
     status: Mapped[DocumentStatus] = enum_column(DocumentStatus, default=DocumentStatus.uploaded)
+    # False once a newer upload for the same doc_type replaces it (old file kept for audit).
+    is_current: Mapped[bool] = mapped_column(Boolean, default=True)
+    classified_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    extraction_method: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    extraction_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     uploaded_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
     uploaded_at: Mapped[datetime] = mapped_column(default=utcnow)
 
