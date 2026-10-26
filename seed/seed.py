@@ -140,6 +140,9 @@ def seed_institutions_and_applications(output_dir: Path = OUTPUT_DIR) -> list[di
         institutions = [_get_or_create_institution(db, data) for data in build_institutions()]
         if db.scalar(select(func.count()).select_from(Application)):
             db.commit()
+            if not (output_dir / "mock_issuer_data.json").exists():
+                print("WARNING: MOCK issuer data is missing for this existing database; issuer checks will report "
+                      "'source unavailable'. Run ./scripts/reset-demo.sh for a consistent clean start.")
             return results
 
         manifest_path = output_dir / "manifest.json"

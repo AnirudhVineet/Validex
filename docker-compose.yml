@@ -28,6 +28,9 @@ services:
       SUMMARY_MODEL: ${SUMMARY_MODEL:-openai/gpt-oss-120b}
     volumes:
       - files:/data/files
+      # Generated SYNTHETIC documents + MOCK issuer records. Must persist with the database:
+      # recreating the container (e.g. after editing .env) must not lose them.
+      - seedout:/app/seed/output
     ports:
       - "8000:8000"
     depends_on:
@@ -46,3 +49,4 @@ services:
 volumes:
   pgdata:
   files:
+  seedout:
