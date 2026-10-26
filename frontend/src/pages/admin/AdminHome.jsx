@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api/client.js";
-import Layout from "../../components/Layout.jsx";
+import Layout, { PageHeader } from "../../components/Layout.jsx";
 import { Badge, Button, Card, ErrorText, formatDate, useAsync } from "../../components/ui.jsx";
 
 export default function AdminHome() {
@@ -18,12 +18,11 @@ export default function AdminHome() {
 
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold">Admin</h1>
+      <PageHeader title="Audit and users" subtitle="Hash-chained, tamper-evident record of every action." />
       <ErrorText error={error} />
 
       <Card
-        title="Audit log (hash-chained, tamper-evident)"
-        className="mt-4"
+        title="Audit log"
         actions={<Button disabled={busy} onClick={() => run(async () => setVerify(await api("/audit/verify")))}>Verify chain</Button>}
       >
         {verify && (
@@ -64,7 +63,6 @@ export default function AdminHome() {
             ))}
           </tbody>
         </table>
-        <p className="mt-2 text-xs text-slate-500">Rules are edited on the Rule editor page (admin and senior authority only).</p>
       </Card>
     </Layout>
   );

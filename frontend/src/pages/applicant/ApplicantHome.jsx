@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../api/client.js";
-import Layout from "../../components/Layout.jsx";
+import Layout, { PageHeader } from "../../components/Layout.jsx";
 import { AlertsPanel } from "../../components/ReviewTools.jsx";
-import { Badge, Button, Card, ErrorText, Notice, formatDate } from "../../components/ui.jsx";
+import { Badge, Button, Card, Empty, ErrorText, Tag, formatDate, table } from "../../components/ui.jsx";
 
 const CATEGORIES = [
-  { value: "eoa_no_change", label: "Extension of Approval: no change" },
-  { value: "eoa_increase_intake", label: "Extension of Approval: increase in intake" },
+  { value: "eoa_no_change", label: "Extension of Approval - no change" },
+  { value: "eoa_increase_intake", label: "Extension of Approval - increase in intake" },
 ];
 
 function NewApplication({ onCreated }) {
@@ -15,6 +15,7 @@ function NewApplication({ onCreated }) {
   const [year, setYear] = useState("2027-28");
   const [intake, setIntake] = useState("");
   const [error, setError] = useState("");
+  const input = "mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm";
 
   async function create(e) {
     e.preventDefault();
@@ -28,21 +29,21 @@ function NewApplication({ onCreated }) {
   }
 
   return (
-    <form onSubmit={create} className="grid gap-3 sm:grid-cols-4 sm:items-end">
-      <label className="text-sm sm:col-span-2">
+    <form onSubmit={create} className="grid gap-4 sm:grid-cols-4 sm:items-end">
+      <label className="text-sm font-medium text-slate-700 sm:col-span-2">
         Category
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1 w-full rounded border px-2 py-1.5">
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className={input}>
           {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
       </label>
-      <label className="text-sm">
+      <label className="text-sm font-medium text-slate-700">
         Academic year
-        <input value={year} onChange={(e) => setYear(e.target.value)} pattern="[0-9]{4}-[0-9]{2}" className="mt-1 w-full rounded border px-2 py-1.5" />
+        <input value={year} onChange={(e) => setYear(e.target.value)} pattern="[0-9]{4}-[0-9]{2}" className={input} />
       </label>
       {category === "eoa_increase_intake" ? (
-        <label className="text-sm">
+        <label className="text-sm font-medium text-slate-700">
           Requested total intake
-          <input type="number" min="0" value={intake} onChange={(e) => setIntake(e.target.value)} className="mt-1 w-full rounded border px-2 py-1.5" />
+          <input type="number" min="0" value={intake} onChange={(e) => setIntake(e.target.value)} className={input} />
         </label>
       ) : <div />}
       <div className="sm:col-span-4">
@@ -64,40 +65,46 @@ export default function ApplicantHome() {
 
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold">My applications</h1>
-      <p className="mt-1 text-slate-600">Upload documents, run a pre-check to catch problems early, then submit.</p>
-      <div className="mt-4"><Notice>Checklists are ILLUSTRATIVE for this prototype and are not the official AICTE requirement list.</Notice></div>
+      <PageHeader title="Applications" subtitle="Prepare, check and submit Extension of Approval applications." />
       <ErrorText error={error} />
 
-      <Card title="Alerts" className="mt-4"><AlertsPanel appBasePath="/applicant" /></Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <Card title="My applications">
+            {!apps && <Empty>Loading...</Empty>}
+            {apps?.length === 0 && <Empty>No applications yet.</Empty>}
+            {apps?.length > 0 && (
+              <div className={table.wrap}>
+                <table className={table.table}>
+                  <thead className={table.head}>
+                    <tr><th className={table.th}>Category</th><th className={table.th}>Year</th><th className={table.th}>Status</th><th className={table.th}>Version</th><th className={table.th}>Updated</th><th /></tr>
+                  </thead>
+                  <tbody>
+                    {apps.map((a) => (
+                      <tr key={a.id} className={table.row}>
+                        <td className={table.td}>{CATEGORIES.find((c) => c.value === a.category)?.label}</td>
+                        <td className={table.td}>{a.academic_year}</td>
+                        <td className={table.td}><Badge value={a.status} /></td>
+                        <td className={table.td}>v{a.current_version}</td>
+                        <td className={`${table.td} text-slate-500`}>{formatDate(a.updated_at)}</td>
+                        <td className={`${table.td} text-right`}>
+                          <Link className="font-medium text-brand-700 hover:underline" to={`/applicant/applications/${a.id}`}>Open</Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
 
-      <Card title="Applications" className="mt-4">
-        {!apps && <p className="text-sm text-slate-500">Loading...</p>}
-        {apps?.length === 0 && <p className="text-sm text-slate-500">No applications yet. Start one below.</p>}
-        {apps?.length > 0 && (
-          <table className="w-full text-sm">
-            <thead className="text-left text-slate-500">
-              <tr><th className="py-1">Category</th><th>Year</th><th>Status</th><th>Version</th><th>Updated</th><th /></tr>
-            </thead>
-            <tbody>
-              {apps.map((a) => (
-                <tr key={a.id} className="border-t border-slate-100">
-                  <td className="py-2">{CATEGORIES.find((c) => c.value === a.category)?.label}</td>
-                  <td>{a.academic_year}</td>
-                  <td><Badge value={a.status} /></td>
-                  <td>v{a.current_version}</td>
-                  <td>{formatDate(a.updated_at)}</td>
-                  <td className="text-right"><Link className="text-sky-700 hover:underline" to={`/applicant/applications/${a.id}`}>Open</Link></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Card>
+          <Card title="New application" actions={<Tag>Illustrative checklists</Tag>}>
+            <NewApplication onCreated={(a) => navigate(`/applicant/applications/${a.id}`)} />
+          </Card>
+        </div>
 
-      <Card title="Start a new application" className="mt-4">
-        <NewApplication onCreated={(a) => navigate(`/applicant/applications/${a.id}`)} />
-      </Card>
+        <Card title="Alerts"><AlertsPanel appBasePath="/applicant" /></Card>
+      </div>
     </Layout>
   );
 }

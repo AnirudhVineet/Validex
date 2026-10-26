@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
-import Layout from "../components/Layout.jsx";
-import { Badge, Button, Card, ErrorText, Notice, formatDate, useAsync } from "../components/ui.jsx";
+import Layout, { PageHeader } from "../components/Layout.jsx";
+import { Badge, Button, Card, ErrorText, Tag, formatDate, useAsync } from "../components/ui.jsx";
 
 // Admin / senior authority only (enforced by the backend). Saving creates a new version;
 // re-running validation keeps all earlier runs and findings for audit.
@@ -43,8 +43,7 @@ export default function RuleEditor() {
 
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold">Validation rules</h1>
-      <div className="mt-2"><Notice>Rules are ILLUSTRATIVE and must be checked against the current AICTE Approval Process Handbook before any real use. Every rule is deterministic; no AI decides compliance.</Notice></div>
+      <PageHeader title="Validation rules" subtitle={<><Tag>Illustrative</Tag> Versioned and audited. Every rule is deterministic.</>} />
       <ErrorText error={error} />
       {message && <p className="mt-2 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{message}</p>}
 

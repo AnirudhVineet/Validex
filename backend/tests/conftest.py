@@ -40,6 +40,10 @@ def temp_storage(tmp_path, monkeypatch):
     issuer = tmp_path / "mock_issuer_data.json"
     issuer.write_text(json.dumps({"is_mock": True, "records": {}}))
     monkeypatch.setattr(settings, "mock_issuer_data_path", issuer)
+    # Tests never depend on a developer's local .env (AI features off, no key).
+    monkeypatch.setattr(settings, "ai_fallback_enabled", False)
+    monkeypatch.setattr(settings, "llm_summary_enabled", False)
+    monkeypatch.setattr(settings, "groq_api_key", "")
 
 
 def register_issuer_record(gen: docgen.GeneratedDoc, **changes) -> None:

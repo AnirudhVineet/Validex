@@ -3,8 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../../api/client.js";
 import { DocumentPanel } from "../../components/Documents.jsx";
 import { FindingsList, IncompleteChecks, SeveritySummary } from "../../components/Findings.jsx";
-import Layout from "../../components/Layout.jsx";
-import { Badge, Button, Card, ErrorText, Notice, formatDate, useAsync } from "../../components/ui.jsx";
+import Layout, { PageHeader } from "../../components/Layout.jsx";
+import { Badge, Button, Card, Empty, ErrorText, Tag, formatDate, useAsync } from "../../components/ui.jsx";
 
 const EDITABLE = ["draft", "returned_for_correction"];
 
@@ -25,26 +25,25 @@ function UploadSlot({ item, appId, editable, onUploaded }) {
   }
 
   return (
-    <tr className="border-t border-slate-100 align-top">
-      <td className="py-2 pr-3">
-        <div className="font-medium">{item.label}</div>
-        <div className="text-xs text-slate-500">{item.description}</div>
-      </td>
-      <td className="py-2 pr-3">
-        <Badge value={item.requirement} />
+    <li className="flex items-start justify-between gap-3 py-3">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{item.label}</span>
+          <Badge value={item.requirement} />
+        </div>
         {item.configured_as === "conditional" && <div className="mt-1 text-xs text-slate-500">{item.reason}</div>}
-      </td>
-      <td className="py-2 pr-3">{item.uploaded ? <Badge value={item.document_status} /> : <span className="text-xs text-slate-400">not uploaded</span>}</td>
-      <td className="py-2 text-right">
+        <ErrorText error={error} />
+      </div>
+      <div className="flex flex-none items-center gap-3">
+        {item.uploaded ? <Badge value={item.document_status} /> : <span className="text-xs text-slate-400">Not uploaded</span>}
         {editable && (
-          <label className="cursor-pointer rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100">
+          <label className="cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
             {busy ? "Uploading..." : item.uploaded ? "Replace" : "Upload"}
             <input type="file" accept=".pdf,.png,.jpg,.jpeg" className="hidden" onChange={onFile} disabled={busy} />
           </label>
         )}
-        <ErrorText error={error} />
-      </td>
-    </tr>
+      </div>
+    </li>
   );
 }
 
@@ -59,10 +58,11 @@ function IntakeForm({ app, onSaved }) {
     });
   }
   return (
-    <form onSubmit={save} className="flex items-end gap-2">
-      <label className="text-sm">
+    <form onSubmit={save} className="mb-2 flex items-end gap-2 border-b border-slate-100 pb-4">
+      <label className="text-sm font-medium text-slate-700">
         Requested total intake
-        <input type="number" min="0" required value={value} onChange={(e) => setValue(e.target.value)} className="mt-1 block rounded border px-2 py-1" />
+        <input type="number" min="0" required value={value} onChange={(e) => setValue(e.target.value)}
+          className="mt-1 block rounded-md border border-slate-300 px-3 py-1.5" />
       </label>
       <Button type="submit" variant="secondary" disabled={busy}>Save</Button>
       <ErrorText error={error} />
@@ -81,7 +81,7 @@ export default function ApplicationWorkspace() {
 
   useEffect(load, [load]);
 
-  if (!report) return <Layout><ErrorText error={error} />{!error && <p className="text-slate-500">Loading...</p>}</Layout>;
+  if (!report) return <Layout><ErrorText error={error} />{!error && <Empty>Loading...</Empty>}</Layout>;
 
   const { application: app, checklist, run: lastRun } = report;
   const editable = EDITABLE.includes(app.status);
@@ -89,35 +89,34 @@ export default function ApplicationWorkspace() {
 
   return (
     <Layout>
-      <div className="flex flex-wrap items-center gap-3">
-        <Link to="/applicant" className="text-sm text-sky-700 hover:underline">&larr; My applications</Link>
-        <h1 className="text-2xl font-semibold">{report.institution.name}</h1>
-        <Badge value={app.status} />
-        <span className="text-sm text-slate-500">version {app.current_version} · {app.academic_year}</span>
-        <Link to={`/applications/${app.id}/report`} className="ml-auto text-sm text-sky-700 hover:underline">Printable report</Link>
-      </div>
+      <PageHeader
+        back={<Link to="/applicant" className="text-sm text-brand-700 hover:underline">&larr; Applications</Link>}
+        title={report.institution.name}
+        subtitle={<><Badge value={app.status} /> <span>Version {app.current_version} · {app.academic_year}</span></>}
+      >
+        <Link to={`/applications/${app.id}/report`} className="text-sm font-medium text-brand-700 hover:underline">Printable report</Link>
+      </PageHeader>
+
       {app.status === "returned_for_correction" && (
-        <p className="mt-3 rounded bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          This application was returned for correction. Replace the documents mentioned in the findings, run a pre-check, then resubmit.
+        <p className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Returned for correction. Fix the items below, run a pre-check, then resubmit.
         </p>
       )}
       <ErrorText error={error} />
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Card title="Checklist (illustrative)">
-          {app.category === "eoa_increase_intake" && editable && <div className="mb-3"><IntakeForm app={app} onSaved={load} /></div>}
-          <table className="w-full text-sm">
-            <tbody>
-              {checklist.map((item) => (
-                <UploadSlot key={item.doc_type} item={item} appId={app.id} editable={editable} onUploaded={load} />
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-3 text-xs text-slate-500">PDF, PNG or JPEG, up to 10 MB. Files are checked by content, not by name.</p>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card title="Document checklist" actions={<Tag>Illustrative</Tag>}>
+          {app.category === "eoa_increase_intake" && editable && <IntakeForm app={app} onSaved={load} />}
+          <ul className="divide-y divide-slate-100">
+            {checklist.map((item) => (
+              <UploadSlot key={item.doc_type} item={item} appId={app.id} editable={editable} onUploaded={load} />
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-slate-400">PDF, PNG or JPEG · max 10 MB</p>
         </Card>
 
         <Card
-          title="Pre-check results"
+          title="Pre-check"
           actions={editable && (
             <Button variant="secondary" disabled={busy} onClick={() => run(async () => {
               await api(`/applications/${app.id}/validate?precheck=true`, { method: "POST" });
@@ -128,38 +127,40 @@ export default function ApplicationWorkspace() {
           )}
         >
           {lastRun ? (
-            <div className="space-y-3">
-              <p className="text-xs text-slate-500">
-                {lastRun.is_precheck ? "Pre-check" : "Official validation"} · {formatDate(lastRun.started_at)} · rules {lastRun.rule_set_version}
-              </p>
-              <SeveritySummary summary={report.summary} />
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <SeveritySummary summary={report.summary} />
+                <span className="text-xs text-slate-400">{formatDate(lastRun.started_at)}</span>
+              </div>
               <IncompleteChecks items={report.incomplete_checks} />
               <FindingsList findings={report.findings} documents={report.documents} rules={report.rules} />
             </div>
           ) : (
-            <p className="text-sm text-slate-500">Run a pre-check to see what the automated checks find before you submit.</p>
+            <Empty>Run a pre-check to see issues before you submit.</Empty>
           )}
         </Card>
       </div>
 
       {report.documents.length > 0 && (
-        <Card title="Uploaded documents and extracted values" className="mt-4">
-          <div className="grid gap-3 lg:grid-cols-2">
+        <Card title="Uploaded documents" className="mt-6">
+          <div className="grid gap-4 lg:grid-cols-2">
             {report.documents.map((d) => <DocumentPanel key={d.id} doc={d} canCorrect={false} />)}
           </div>
         </Card>
       )}
 
       {editable && (
-        <Card title={app.status === "draft" ? "Submit" : "Resubmit"} className="mt-4">
-          {missingRequired.length > 0 && (
-            <p className="mb-2 text-sm text-amber-800">Still missing: {missingRequired.map((m) => m.label).join(", ")}. You can submit, but the officer will see these as findings.</p>
-          )}
-          {report.missing_form_fields.length > 0 && (
-            <p className="mb-2 text-sm text-red-700">Fill in: {report.missing_form_fields.join(", ")}</p>
-          )}
-          <Notice>Submitting runs the official automated validation. An authorised official reviews the results and makes every decision.</Notice>
-          <div className="mt-3">
+        <Card title={app.status === "draft" ? "Submit" : "Resubmit"} className="mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1 text-sm">
+              {missingRequired.length > 0 && (
+                <p className="text-amber-800">Missing: {missingRequired.map((m) => m.label).join(", ")}</p>
+              )}
+              {report.missing_form_fields.length > 0 && (
+                <p className="text-red-700">Fill in: {report.missing_form_fields.join(", ")}</p>
+              )}
+              <p className="text-slate-500">An officer reviews every result after submission.</p>
+            </div>
             <Button disabled={busy} onClick={() => run(async () => {
               await api(`/applications/${app.id}/submit`, { method: "POST" });
               load();

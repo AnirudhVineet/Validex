@@ -91,8 +91,6 @@ def time_saved(db: Session) -> dict:
         "minutes": minutes, "hours": round(minutes / 60, 1),
         "inputs": {"documents_auto_checked": checked_docs, "issuer_verifications": verifications,
                    "official_validation_runs": official_runs},
-        "assumption": (f"ASSUMPTION, not measured: {m_doc} min saved per document whose fields were read and "
-                       f"checked automatically, {m_ver} min per issuer lookup, {m_run} min per validation run "
-                       "(collating the checklist). Officers still review every finding. Replace these numbers "
-                       "with timings from a real pilot."),
+        "assumption": (f"ASSUMPTION, not measured: {m_doc} min per document, {m_ver} min per issuer check, "
+                       f"{m_run} min per validation run."),
     }

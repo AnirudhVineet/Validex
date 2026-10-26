@@ -41,9 +41,9 @@ export function BarList({ rows, unit = "" }) {
 
 export function StatTile({ label, value, note }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="text-2xl font-semibold tabular-nums">{value}</div>
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</div>
       {note && <div className="mt-1 text-xs text-slate-500">{note}</div>}
     </div>
   );
@@ -60,40 +60,33 @@ export function ExpiryForecast({ basePath }) {
   return (
     <div>
       <div className="mb-2 flex items-center gap-2 text-sm">
-        <span className="text-slate-600">Window</span>
         {[30, 90, 180].map((d) => (
           <button key={d} onClick={() => setDays(d)}
-            className={`rounded-full px-2.5 py-0.5 ${days === d ? "bg-slate-900 text-white" : "border border-slate-300"}`}>
+            className={`rounded-md px-2.5 py-1 text-xs ${days === d ? "bg-brand-50 font-medium text-brand-800" : "text-slate-500 hover:bg-slate-50"}`}>
             {d} days
           </button>
         ))}
       </div>
       <ErrorText error={error} />
       {data && (data.items.length === 0
-        ? <p className="text-sm text-slate-500">No documents expiring within {days} days.</p>
+        ? <p className="py-4 text-center text-sm text-slate-400">Nothing expiring within {days} days.</p>
         : (
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs text-slate-500">
-              <tr><th className="py-1">Institution</th><th>Document</th><th>Expiry</th><th>Days left</th><th /></tr>
-            </thead>
-            <tbody>
-              {data.items.map((i) => (
-                <tr key={`${i.application_id}${i.doc_type}`} className="border-t border-slate-100">
-                  <td className="py-1">{i.institution}</td>
-                  <td>{i.doc_type.replaceAll("_", " ")}</td>
-                  <td className="tabular-nums">{i.expiry_date}</td>
-                  <td className="tabular-nums">
-                    {i.days_left < 0
-                      ? <span className="text-red-700">expired {-i.days_left} d ago</span>
-                      : i.days_left}
-                  </td>
-                  <td className="text-right">
-                    {basePath && <Link className="text-sky-700 hover:underline" to={`${basePath}/applications/${i.application_id}`}>open</Link>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul className="divide-y divide-slate-100">
+            {data.items.map((i) => (
+              <li key={`${i.application_id}${i.doc_type}`} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-slate-800">
+                    {basePath ? <Link className="hover:underline" to={`${basePath}/applications/${i.application_id}`}>{i.institution.replace("SYNTHETIC ", "")}</Link>
+                      : i.institution.replace("SYNTHETIC ", "")}
+                  </div>
+                  <div className="text-xs capitalize text-slate-400">{i.doc_type.replaceAll("_", " ")} · {i.expiry_date}</div>
+                </div>
+                <span className={`flex-none whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium ${i.days_left < 0 ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}>
+                  {i.days_left < 0 ? `Expired ${-i.days_left} d ago` : `${i.days_left} days left`}
+                </span>
+              </li>
+            ))}
+          </ul>
         ))}
     </div>
   );
@@ -107,12 +100,12 @@ export function TimeSaved() {
     <div>
       <div className="flex items-baseline gap-2">
         <span className="text-3xl font-semibold tabular-nums">~{data.hours} h</span>
-        <span className="text-sm text-slate-500">estimated officer time saved</span>
+        <span className="text-sm text-slate-500">officer time saved</span>
       </div>
-      <p className="mt-1 text-xs text-slate-600">
-        {data.inputs.documents_auto_checked} documents auto-checked · {data.inputs.issuer_verifications} issuer lookups · {data.inputs.official_validation_runs} validation runs
+      <p className="mt-2 text-xs text-slate-500">
+        {data.inputs.documents_auto_checked} documents · {data.inputs.issuer_verifications} issuer checks · {data.inputs.official_validation_runs} runs
       </p>
-      <p className="mt-2 rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">{data.assumption}</p>
+      <p className="mt-2 text-xs text-slate-400">{data.assumption}</p>
     </div>
   );
 }
@@ -123,19 +116,8 @@ export function SeniorOverview() {
   useEffect(() => { api("/dashboard/senior").then(setData).catch((e) => setError(e.message)); }, []);
   if (error) return <ErrorText error={error} />;
   if (!data) return <p className="text-sm text-slate-500">Loading overview...</p>;
-  const counts = data.status_counts;
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <div>
-        <h3 className="mb-2 text-sm font-medium">Applications by status</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(counts).map(([k, v]) => (
-            <div key={k} className="flex items-center justify-between rounded border border-slate-100 px-2 py-1 text-sm">
-              <Badge value={k} /> <span className="tabular-nums">{v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="grid gap-8 lg:grid-cols-2">
       <div>
         <h3 className="mb-2 text-sm font-medium">Ageing of open cases (days since submission)</h3>
         <BarList rows={Object.entries(data.ageing).map(([label, value]) => ({

@@ -25,7 +25,7 @@ export default function ReportPage() {
         <Button variant="secondary" onClick={() => window.print()}>Print</Button>
       </div>
       <h1 className="mt-4 text-2xl font-semibold">Validation report</h1>
-      <p className="text-sm text-slate-600">{report.disclaimer}</p>
+      <p className="text-sm text-slate-500">Decision support only. Rules are illustrative.</p>
 
       <Card title="Application" className="mt-4">
         <dl className="grid grid-cols-[10rem_1fr] gap-1 text-sm">

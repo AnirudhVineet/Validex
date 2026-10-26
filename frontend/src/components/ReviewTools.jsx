@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client.js";
-import { Badge, Button, ErrorText, formatDate, useAsync } from "./ui.jsx";
+import { Badge, Button, Empty, ErrorText, Tag, formatDate, useAsync } from "./ui.jsx";
 
 const VERIFICATION_STYLE = {
   verified: "bg-emerald-100 text-emerald-800",
@@ -19,26 +19,24 @@ function VerificationStatus({ status }) {
 
 export function VerificationPanel({ verifications, canVerify, onChanged }) {
   const { busy, error, run } = useAsync();
-  if (!verifications?.length) return <p className="text-sm text-slate-500">No documents with a configured issuer yet.</p>;
+  if (!verifications?.length) return <Empty>No documents to verify yet.</Empty>;
   return (
     <div className="space-y-4">
-      <p className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-900">
-        All issuer sources are <b>MOCK</b> services for this prototype. No live government system is contacted.
-      </p>
+      <div className="flex items-center gap-2 text-xs text-slate-500"><Tag>Mock issuers</Tag> Simulated registries, no live system is contacted.</div>
       <ErrorText error={error} />
       {verifications.map((v) => {
         const fields = [...new Set([...Object.keys(v.submitted_values || {}), ...Object.keys(v.source_values || {})])];
         const bad = new Set((v.mismatches || []).map((m) => m.field));
         return (
-          <div key={v.id} className="rounded border border-slate-200 p-3">
+          <div key={v.id} className="rounded-lg border border-slate-200 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-medium capitalize">{v.doc_type.replaceAll("_", " ")}</span>
               <VerificationStatus status={v.status} />
-              <span className="text-xs text-slate-500">{v.source} · ref {v.reference_submitted || "none"} · {formatDate(v.requested_at)}</span>
+              <span className="text-xs text-slate-400">{v.source.replace("MOCK ", "")} · {v.reference_submitted || "no reference"}</span>
               {canVerify && (
                 <Button variant="secondary" className="ml-auto" disabled={busy}
                   onClick={() => run(async () => { await api(`/documents/${v.document_id}/verify`, { method: "POST" }); onChanged(); })}>
-                  Re-verify (MOCK)
+                  Re-verify
                 </Button>
               )}
             </div>
@@ -46,7 +44,7 @@ export function VerificationPanel({ verifications, canVerify, onChanged }) {
             {fields.length > 0 && (
               <table className="mt-2 w-full text-sm">
                 <thead className="text-left text-xs text-slate-500">
-                  <tr><th className="py-1">Field</th><th>Submitted value</th><th>Source value (MOCK)</th><th /></tr>
+                  <tr><th className="py-1">Field</th><th>Submitted</th><th>Issuer record</th><th /></tr>
                 </thead>
                 <tbody>
                   {fields.map((f) => (
@@ -73,9 +71,9 @@ export function PriorityPanel({ priority }) {
     <div>
       <div className="flex items-baseline gap-2">
         <span className="text-3xl font-semibold">{priority.score}</span>
-        <span className="text-sm text-slate-500">/ {priority.max}</span>
+        <span className="text-sm text-slate-400">/ {priority.max}</span>
       </div>
-      <p className="mt-1 text-xs text-slate-500">{priority.description}</p>
+      <p className="mt-1 text-xs text-slate-400">Ordering aid. Not a probability.</p>
       <table className="mt-2 w-full text-sm">
         <tbody>
           {priority.factors.map((f) => (
@@ -85,7 +83,7 @@ export function PriorityPanel({ priority }) {
               <td className="text-right font-medium">+{f.points}</td>
             </tr>
           ))}
-          {priority.factors.length === 0 && <tr><td className="py-1 text-slate-500">No open issues.</td></tr>}
+          {priority.factors.length === 0 && <tr><td className="py-1 text-slate-400">No open issues.</td></tr>}
         </tbody>
       </table>
       {priority.raw_points > priority.max && <p className="mt-1 text-xs text-slate-500">Raw total {priority.raw_points}, capped at {priority.max}.</p>}
@@ -113,21 +111,21 @@ export function AlertsPanel({ appBasePath }) {
   }
 
   if (error) return <ErrorText error={error} />;
-  if (!items) return <p className="text-sm text-slate-500">Loading alerts...</p>;
+  if (!items) return <Empty>Loading...</Empty>;
   const unread = items.filter((n) => !n.read_at);
-  if (!unread.length) return <p className="text-sm text-slate-500">No unread alerts.</p>;
+  if (!unread.length) return <Empty>No new alerts.</Empty>;
   return (
-    <ul className="space-y-2">
-      {unread.slice(0, 12).map((n) => (
-        <li key={n.id} className="flex items-start gap-2 text-sm">
-          <Badge value={KIND_LABEL[n.kind] || n.kind} />
+    <ul className="divide-y divide-slate-100">
+      {unread.slice(0, 8).map((n) => (
+        <li key={n.id} className="flex items-start gap-2 py-2.5 text-sm">
           <span className="flex-1">
-            {n.message}
+            <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500">{KIND_LABEL[n.kind] || n.kind}</span>
+            {n.message.replaceAll("SYNTHETIC ", "")}
             {n.application_id && appBasePath && (
-              <> · <Link className="text-sky-700 hover:underline" to={`${appBasePath}/applications/${n.application_id}`}>open</Link></>
+              <> · <Link className="font-medium text-brand-700 hover:underline" to={`${appBasePath}/applications/${n.application_id}`}>Open</Link></>
             )}
           </span>
-          <button className="text-xs text-slate-500 hover:underline" onClick={() => markRead(n.id)}>mark read</button>
+          <button className="text-xs text-slate-400 hover:text-slate-700" title="Mark as read" onClick={() => markRead(n.id)}>Dismiss</button>
         </li>
       ))}
     </ul>

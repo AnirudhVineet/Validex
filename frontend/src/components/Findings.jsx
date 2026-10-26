@@ -12,7 +12,7 @@ const REVIEW_ACTIONS = [
 function Row({ label, children }) {
   if (children === null || children === undefined || children === "") return null;
   return (
-    <div className="grid grid-cols-[9rem_1fr] gap-2 text-sm">
+    <div className="grid grid-cols-[8rem_1fr] gap-2 text-sm">
       <dt className="text-slate-500">{label}</dt>
       <dd className="break-words">{children}</dd>
     </div>
@@ -31,7 +31,7 @@ function evidenceText(evidence) {
 // Explainability: what was checked, what was found vs expected, which rule, what to do next.
 function Explanation({ finding, rule }) {
   return (
-    <div className="mt-3 grid gap-3 rounded border border-sky-100 bg-sky-50/50 p-3 lg:grid-cols-2">
+    <div className="mt-3 grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 lg:grid-cols-2">
       <dl className="space-y-1">
         <Row label="What was checked">{rule?.description || finding.rule_id}</Row>
         <Row label="Rule">{`${finding.rule_id} v${finding.rule_version}${rule ? ` (${rule.check}, ${rule.category})` : ""}`}</Row>
@@ -40,13 +40,13 @@ function Explanation({ finding, rule }) {
         <Row label="Why flagged">{finding.explanation}</Row>
         <Row label="Next step">{finding.suggested_action}</Row>
         {finding.category === "anomaly" && (
-          <p className="text-xs text-amber-800">Preliminary indicator only. Requires manual review; it may have a legitimate explanation.</p>
+          <p className="text-xs text-amber-700">Preliminary indicator: needs manual review, may have a legitimate explanation.</p>
         )}
       </dl>
       <div>
         {finding.document_id
           ? <EvidenceViewer documentId={finding.document_id} page={finding.evidence?.page} bbox={finding.evidence?.bbox} />
-          : <p className="text-sm text-slate-500">This finding is not tied to a document region (e.g. missing document or institute record).</p>}
+          : <p className="text-sm text-slate-400">No document region for this finding.</p>}
       </div>
     </div>
   );
@@ -61,13 +61,13 @@ export function FindingCard({ finding, docLabel, rule, canReview, onChanged }) {
   const reviewable = canReview && finding.status === "open";
 
   return (
-    <article className={`rounded border p-3 ${open ? "border-sky-300" : "border-slate-200"}`}>
+    <article className={`rounded-lg border bg-white p-4 ${open ? "border-brand-600 shadow-sm" : "border-slate-200"}`}>
       <header className="flex flex-wrap items-center gap-2">
         <Badge value={finding.severity} kind="severity" />
-        {finding.category === "anomaly" && <Badge value="anomaly indicator" />}
-        {finding.category === "verification" && <Badge value="issuer check (MOCK)" />}
-        <span className="font-medium">{finding.title}</span>
-        <span className="ml-auto flex items-center gap-2 text-xs text-slate-500">
+        {finding.category === "anomaly" && <Badge value="indicator" />}
+        {finding.category === "verification" && <Badge value="issuer check" />}
+        <span className="font-medium text-slate-800">{finding.title}</span>
+        <span className="ml-auto flex items-center gap-2 text-xs text-slate-400">
           {finding.rule_id} v{finding.rule_version} <Badge value={finding.status} />
         </span>
       </header>
@@ -79,7 +79,7 @@ export function FindingCard({ finding, docLabel, rule, canReview, onChanged }) {
         <Row label="Review note">{finding.review_reason}</Row>
       </dl>
       <div className="mt-2 flex flex-wrap items-start gap-2">
-        <button className="text-sm text-sky-700 hover:underline" onClick={() => setOpen(!open)}>
+        <button className="text-sm font-medium text-brand-700 hover:underline" onClick={() => setOpen(!open)}>
           {open ? "Hide evidence and explanation" : "Show evidence and explanation"}
         </button>
       </div>
@@ -97,7 +97,7 @@ export function FindingCard({ finding, docLabel, rule, canReview, onChanged }) {
 
 export function FindingsList({ findings, documents, rules, canReview, onChanged }) {
   const labels = Object.fromEntries((documents || []).map((d) => [d.id, d.doc_type.replaceAll("_", " ")]));
-  if (!findings.length) return <p className="text-sm text-slate-500">No findings in this run.</p>;
+  if (!findings.length) return <p className="py-6 text-center text-sm text-emerald-700">No findings. All checks passed.</p>;
   return (
     <div className="space-y-3">
       {findings.map((f) => (
@@ -120,8 +120,8 @@ export function IncompleteChecks({ items }) {
     groups[key].rules.push(item.rule_id);
   }
   return (
-    <div className="rounded border border-amber-200 bg-amber-50 p-3 text-sm">
-      <p className="font-medium text-amber-900">Checks that could not complete (need manual review)</p>
+    <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm">
+      <p className="font-medium text-amber-900">Could not be checked automatically</p>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-900">
         {Object.values(groups).map((g) => (
           <li key={`${g.doc_type}${g.reason}`}>

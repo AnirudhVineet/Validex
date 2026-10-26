@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Validex brand: a deep navy primary with a calm blue accent. System fonts only (works offline). */
+@theme {
+  --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --color-brand-50: #eef4fb;
+  --color-brand-100: #d9e6f6;
+  --color-brand-600: #1f5fae;
+  --color-brand-700: #184c8f;
+  --color-brand-800: #133b70;
+  --color-brand-900: #0e2a52;
+  --color-brand-950: #0a1e3c;
+}
+
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply bg-slate-100 text-slate-900 antialiased;
 }

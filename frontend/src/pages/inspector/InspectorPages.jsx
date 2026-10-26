@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../../api/client.js";
 import { InspectionPanel } from "../../components/CaseTools.jsx";
 import { FindingsList } from "../../components/Findings.jsx";
-import Layout from "../../components/Layout.jsx";
+import Layout, { PageHeader } from "../../components/Layout.jsx";
 import { Badge, Card, ErrorText, formatDate } from "../../components/ui.jsx";
 
 // Minimal inspector view: flagged (escalated) cases only, enforced by the backend.
@@ -13,10 +13,9 @@ export function InspectorHome() {
   useEffect(() => { api("/applications").then(setApps).catch((e) => setError(e.message)); }, []);
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold">Flagged cases</h1>
-      <p className="mt-1 text-slate-600">Escalated applications that may need a site inspection. Add notes and evidence.</p>
+      <PageHeader title="Flagged cases" subtitle="Escalated applications that may need a site inspection." />
       <ErrorText error={error} />
-      <Card className="mt-4">
+      <Card>
         {!apps && <p className="text-sm text-slate-500">Loading...</p>}
         {apps?.length === 0 && <p className="text-sm text-slate-500">No flagged cases.</p>}
         {apps?.length > 0 && (
@@ -46,14 +45,14 @@ export function InspectorCase() {
   if (!report) return <Layout><ErrorText error={error} />{!error && <p className="text-slate-500">Loading...</p>}</Layout>;
   return (
     <Layout>
-      <div className="flex items-center gap-3">
-        <Link to="/inspector" className="text-sm text-sky-700 hover:underline">&larr; Flagged cases</Link>
-        <h1 className="text-2xl font-semibold">{report.institution.name}</h1>
-        <Badge value={report.application.status} />
-      </div>
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <PageHeader
+        back={<Link to="/inspector" className="text-sm text-brand-700 hover:underline">&larr; Flagged cases</Link>}
+        title={report.institution.name.replace("SYNTHETIC ", "")}
+        subtitle={<Badge value={report.application.status} />}
+      />
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Inspection notes and evidence"><InspectionPanel app={report.application} canAdd /></Card>
-        <Card title="Findings (read-only)">
+        <Card title="Findings">
           <FindingsList findings={report.findings} documents={report.documents} rules={report.rules} />
         </Card>
       </div>

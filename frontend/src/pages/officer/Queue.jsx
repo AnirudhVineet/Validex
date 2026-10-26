@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client.js";
-import Layout from "../../components/Layout.jsx";
-import { ExpiryForecast, SeniorOverview, TimeSaved } from "../../components/Insights.jsx";
+import Layout, { PageHeader } from "../../components/Layout.jsx";
+import { ExpiryForecast, SeniorOverview, StatTile, TimeSaved } from "../../components/Insights.jsx";
 import { AlertsPanel } from "../../components/ReviewTools.jsx";
-import { Badge, Card, ErrorText, formatDate } from "../../components/ui.jsx";
+import { Badge, Card, Empty, ErrorText, formatDate, table } from "../../components/ui.jsx";
 
 const FILTERS = ["all", "submitted", "under_scrutiny", "escalated", "returned_for_correction", "scrutiny_complete"];
+const TILES = [
+  ["submitted", "Submitted"], ["under_scrutiny", "Under scrutiny"], ["escalated", "Escalated"],
+  ["returned_for_correction", "Returned"], ["scrutiny_complete", "Complete"], ["open_findings", "Open findings"],
+];
 
 // Scrutiny queue for officers and senior authorities. `basePath` is /officer or /senior.
 export default function Queue({ title, basePath, defaultFilter = "all", senior = false }) {
@@ -27,64 +31,70 @@ export default function Queue({ title, basePath, defaultFilter = "all", senior =
 
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold">{title}</h1>
-      <p className="mt-1 text-slate-600">Automated findings are decision support. You make every decision.</p>
+      <PageHeader title={title} subtitle="Automated findings support your review. You make every decision." />
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {["submitted", "under_scrutiny", "escalated", "returned_for_correction", "scrutiny_complete", "open_findings"].map((k) => (
-          <div key={k} className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="text-xs capitalize text-slate-500">{k.replaceAll("_", " ")}</div>
-            <div className="text-xl font-semibold">{counts[k] ?? 0}</div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        {TILES.map(([k, label]) => <StatTile key={k} label={label} value={counts[k] ?? 0} />)}
       </div>
 
-      {senior && <Card title="Overview" className="mt-4"><SeniorOverview /></Card>}
+      {senior && <Card title="Overview" className="mt-6"><SeniorOverview /></Card>}
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <Card title="Alerts" className="lg:col-span-1"><AlertsPanel appBasePath={basePath} /></Card>
-        <Card title="Expiry forecast" className="lg:col-span-1"><ExpiryForecast basePath={basePath} /></Card>
-        <Card title="Time saved (estimate)" className="lg:col-span-1"><TimeSaved /></Card>
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
-          <button
-            key={f} onClick={() => setFilter(f)}
-            className={`rounded-full px-3 py-1 text-sm ${filter === f ? "bg-slate-900 text-white" : "border border-slate-300 bg-white"}`}
-          >
-            {f.replaceAll("_", " ")}
-          </button>
-        ))}
-      </div>
-      <ErrorText error={error} />
-
-      <Card className="mt-3">
-        {!apps && <p className="text-sm text-slate-500">Loading...</p>}
-        {apps?.length === 0 && <p className="text-sm text-slate-500">Nothing in this view.</p>}
-        {apps?.length > 0 && <p className="mb-2 text-xs text-slate-500">Sorted by review priority: a weighted count of open issues (breakdown on each case). Not a probability.</p>}
+      <Card title="Applications" className="mt-6"
+        actions={<span className="text-xs text-slate-400" title="Weighted count of open issues. Not a probability.">Sorted by review priority</span>}>
+        <div className="-mt-1 mb-4 flex flex-wrap gap-1 border-b border-slate-100 pb-3">
+          {FILTERS.map((f) => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`rounded-md px-3 py-1.5 text-sm capitalize ${filter === f ? "bg-brand-50 font-medium text-brand-800" : "text-slate-600 hover:bg-slate-50"}`}>
+              {f === "returned_for_correction" ? "returned" : f.replaceAll("_", " ")}
+            </button>
+          ))}
+        </div>
+        <ErrorText error={error} />
+        {!apps && <Empty>Loading...</Empty>}
+        {apps?.length === 0 && <Empty>No applications in this view.</Empty>}
         {apps?.length > 0 && (
-          <table className="w-full text-sm">
-            <thead className="text-left text-slate-500">
-              <tr><th className="py-1" title="Review-priority aid, not a probability">Priority</th><th>Institution</th><th>Category</th><th>Status</th><th>Open findings</th><th>Critical</th><th>Submitted</th><th /></tr>
-            </thead>
-            <tbody>
-              {apps.map((a) => (
-                <tr key={a.id} className="border-t border-slate-100">
-                  <td className="py-2 font-medium">{a.priority_score ?? "-"}</td>
-                  <td>{a.institution_name}</td>
-                  <td>{a.category.replaceAll("_", " ")}</td>
-                  <td><Badge value={a.status} /></td>
-                  <td>{a.open_findings}</td>
-                  <td>{a.critical_findings > 0 ? <Badge value="critical" kind="severity" /> : "-"} {a.critical_findings || ""}</td>
-                  <td>{formatDate(a.submitted_at)}</td>
-                  <td className="text-right"><Link className="text-sky-700 hover:underline" to={`${basePath}/applications/${a.id}`}>Review</Link></td>
+          <div className={table.wrap}>
+            <table className={table.table}>
+              <thead className={table.head}>
+                <tr>
+                  <th className={table.th} title="Review priority: weighted count of open issues, not a probability">Priority</th>
+                  <th className={table.th}>Institution</th><th className={table.th}>Status</th>
+                  <th className={table.th}>Open</th><th className={table.th}>Critical</th>
+                  <th className={table.th}>Submitted</th><th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {apps.map((a) => (
+                  <tr key={a.id} className={table.row}>
+                    <td className={table.td}>
+                      <span className={`inline-block min-w-9 rounded-md px-2 py-0.5 text-center text-xs font-semibold ${a.priority_score >= 40 ? "bg-red-50 text-red-700" : a.priority_score >= 15 ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+                        {a.priority_score ?? "-"}
+                      </span>
+                    </td>
+                    <td className={table.td}>
+                      <div className="font-medium text-slate-800">{a.institution_name.replace("SYNTHETIC ", "")}</div>
+                      <div className="text-xs text-slate-400">{a.category === "eoa_increase_intake" ? "Increase in intake" : "No change"}</div>
+                    </td>
+                    <td className={table.td}><Badge value={a.status} /></td>
+                    <td className={table.td}>{a.open_findings}</td>
+                    <td className={table.td}>{a.critical_findings > 0 ? <span className="font-medium text-red-700">{a.critical_findings}</span> : <span className="text-slate-300">0</span>}</td>
+                    <td className={`${table.td} text-slate-500`}>{formatDate(a.submitted_at)}</td>
+                    <td className={`${table.td} text-right`}>
+                      <Link className="font-medium text-brand-700 hover:underline" to={`${basePath}/applications/${a.id}`}>Review</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <Card title="Alerts"><AlertsPanel appBasePath={basePath} /></Card>
+        <Card title="Expiry forecast"><ExpiryForecast basePath={basePath} /></Card>
+        <Card title="Time saved"><TimeSaved /></Card>
+      </div>
     </Layout>
   );
 }

@@ -35,7 +35,7 @@ export default function App() {
       <Route path="/officer" element={guarded(["scrutiny_officer"], <Queue title="Scrutiny queue" basePath="/officer" />)} />
       <Route path="/officer/applications/:id" element={guarded(["scrutiny_officer"], <CaseReview basePath="/officer" />)} />
 
-      <Route path="/senior" element={guarded(["senior_authority"], <Queue title="Senior authority: overview and cases" basePath="/senior" defaultFilter="escalated" senior />)} />
+      <Route path="/senior" element={guarded(["senior_authority"], <Queue title="Overview" basePath="/senior" defaultFilter="escalated" senior />)} />
       <Route path="/senior/applications/:id" element={guarded(["senior_authority"], <CaseReview basePath="/senior" />)} />
 
       <Route path="/inspector" element={guarded(["inspector"], <InspectorHome />)} />

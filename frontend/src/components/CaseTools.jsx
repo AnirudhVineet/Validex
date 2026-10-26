@@ -1,15 +1,15 @@
 // Phase 3 case tools: deficiency letter draft, optional grounded summary, inspection + advisory.
 import { useEffect, useState } from "react";
 import { api, openDocument } from "../api/client.js";
-import { Badge, Button, ErrorText, Notice, formatDate, useAsync } from "./ui.jsx";
+import { Badge, Button, ErrorText, Tag, formatDate, useAsync } from "./ui.jsx";
 
 export function LetterPanel({ app, canReturn, onReturned }) {
   const [text, setText] = useState("");
   const { busy, error, run } = useAsync();
   return (
     <div className="space-y-2">
-      <Notice>Template-based draft (no AI). Uses only findings the applicant can see. Edit before sending.</Notice>
-      {!text && <Button variant="secondary" disabled={busy} onClick={() => run(async () => {
+      <p className="text-xs text-slate-400">Template draft from findings the applicant can see.</p>
+      {!text && <Button variant="secondary" className="w-full" disabled={busy} onClick={() => run(async () => {
         setText((await api(`/applications/${app.id}/deficiency-letter`, { method: "POST" })).text);
       })}>Draft deficiency letter</Button>}
       {text && (
@@ -39,12 +39,12 @@ export function SummaryPanel({ app, findings }) {
   const titles = Object.fromEntries((findings || []).map((f) => [f.id, `${f.rule_id}`]));
   return (
     <div className="space-y-2">
-      <Notice>Optional AI summary (disabled by default). Every point must cite finding ids; it never changes validation results.</Notice>
-      <Button variant="secondary" disabled={busy} onClick={() => run(async () => setData(await api(`/applications/${app.id}/summary`, { method: "POST" })))}>
+      <p className="text-xs text-slate-400">Cites findings. Never changes results.</p>
+      <Button variant="secondary" className="w-full" disabled={busy} onClick={() => run(async () => setData(await api(`/applications/${app.id}/summary`, { method: "POST" })))}>
         {busy ? "Summarising..." : "Generate summary"}
       </Button>
       <ErrorText error={error} />
-      {data && !data.enabled && <p className="text-sm text-slate-500">{data.note}</p>}
+      {data && !data.enabled && <p className="text-sm text-slate-500">AI summary is turned off.</p>}
       {data?.enabled && (data.insufficient_evidence
         ? <p className="text-sm text-slate-600">Insufficient evidence for a summary. {data.note}</p>
         : (
@@ -114,7 +114,7 @@ export function InspectionPanel({ app, canAdd }) {
       <ErrorText error={error} />
       {advisory && (
         <div>
-          <p className="text-xs text-slate-500">{advisory.notice}</p>
+          <div className="flex items-center gap-2 text-xs text-slate-400"><Tag>Illustrative</Tag> Evidence check only, no measurements.</div>
           <ul className="mt-2 space-y-1 text-sm">
             {advisory.items.map((i) => (
               <li key={i.key} className="flex items-center justify-between gap-2">
@@ -141,7 +141,7 @@ export function InspectionPanel({ app, canAdd }) {
             )}
           </li>
         ))}
-        {records.length === 0 && <li className="text-slate-500">No inspection records.</li>}
+        {records.length === 0 && <li className="text-slate-400">No inspection records.</li>}
       </ul>
     </div>
   );
