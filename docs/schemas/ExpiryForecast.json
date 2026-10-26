@@ -1,0 +1,71 @@
+{
+  "$defs": {
+    "ExpiryItem": {
+      "properties": {
+        "application_id": {
+          "title": "Application Id",
+          "type": "string"
+        },
+        "institution": {
+          "title": "Institution",
+          "type": "string"
+        },
+        "doc_type": {
+          "title": "Doc Type",
+          "type": "string"
+        },
+        "expiry_date": {
+          "title": "Expiry Date",
+          "type": "string"
+        },
+        "days_left": {
+          "title": "Days Left",
+          "type": "integer"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "application_id",
+        "institution",
+        "doc_type",
+        "expiry_date",
+        "days_left",
+        "status"
+      ],
+      "title": "ExpiryItem",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "window_days": {
+      "title": "Window Days",
+      "type": "integer"
+    },
+    "today": {
+      "title": "Today",
+      "type": "string"
+    },
+    "expired": {
+      "title": "Expired",
+      "type": "integer"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ExpiryItem"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "window_days",
+    "today",
+    "expired",
+    "items"
+  ],
+  "title": "ExpiryForecast",
+  "type": "object"
+}

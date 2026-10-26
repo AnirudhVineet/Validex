@@ -1,0 +1,58 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "application_id": {
+      "title": "Application Id",
+      "type": "string"
+    },
+    "inspector_id": {
+      "title": "Inspector Id",
+      "type": "string"
+    },
+    "notes": {
+      "title": "Notes",
+      "type": "string"
+    },
+    "evidence_document_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Evidence Document Id"
+    },
+    "evidence_label": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Evidence Label"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "application_id",
+    "inspector_id",
+    "notes",
+    "evidence_document_id",
+    "evidence_label",
+    "created_at"
+  ],
+  "title": "InspectionOut",
+  "type": "object"
+}

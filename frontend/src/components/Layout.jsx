@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthContext.jsx";
 const NAV = {
   applicant: [["/applicant", "My applications"]],
   scrutiny_officer: [["/officer", "Queue"], ["/officer/rules", "Rules (read-only)"]],
-  senior_authority: [["/senior", "Cases"], ["/senior/rules", "Rule editor"]],
+  senior_authority: [["/senior", "Overview and cases"], ["/senior/rules", "Rule editor"]],
   inspector: [["/inspector", "Flagged cases"]],
   admin: [["/admin", "Audit and users"], ["/admin/rules", "Rule editor"]],
 };

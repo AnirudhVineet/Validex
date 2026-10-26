@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client.js";
 import Layout from "../../components/Layout.jsx";
+import { ExpiryForecast, SeniorOverview, TimeSaved } from "../../components/Insights.jsx";
 import { AlertsPanel } from "../../components/ReviewTools.jsx";
 import { Badge, Card, ErrorText, formatDate } from "../../components/ui.jsx";
 
 const FILTERS = ["all", "submitted", "under_scrutiny", "escalated", "returned_for_correction", "scrutiny_complete"];
 
 // Scrutiny queue for officers and senior authorities. `basePath` is /officer or /senior.
-export default function Queue({ title, basePath, defaultFilter = "all" }) {
+export default function Queue({ title, basePath, defaultFilter = "all", senior = false }) {
   const [filter, setFilter] = useState(defaultFilter);
   const [apps, setApps] = useState(null);
   const [counts, setCounts] = useState({});
@@ -38,7 +39,13 @@ export default function Queue({ title, basePath, defaultFilter = "all" }) {
         ))}
       </div>
 
-      <Card title="Alerts" className="mt-4"><AlertsPanel appBasePath={basePath} /></Card>
+      {senior && <Card title="Overview" className="mt-4"><SeniorOverview /></Card>}
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <Card title="Alerts" className="lg:col-span-1"><AlertsPanel appBasePath={basePath} /></Card>
+        <Card title="Expiry forecast" className="lg:col-span-1"><ExpiryForecast basePath={basePath} /></Card>
+        <Card title="Time saved (estimate)" className="lg:col-span-1"><TimeSaved /></Card>
+      </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         {FILTERS.map((f) => (

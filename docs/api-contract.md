@@ -12,13 +12,18 @@ Shapes are defined in docs/CONTRACTS.md and docs/schemas/*.json.
 | PATCH | `/api/applications/{application_id}` | Update | ApplicationUpdate | ApplicationOut |
 | GET | `/api/applications/{application_id}/checklist` | Checklist |  | list[ChecklistItemOut] |
 | POST | `/api/applications/{application_id}/decision` | Decision | DecisionRequest | ApplicationOut |
+| POST | `/api/applications/{application_id}/deficiency-letter` | Deficiency Letter |  | LetterDraft |
 | POST | `/api/applications/{application_id}/documents` | Upload |  |  |
 | GET | `/api/applications/{application_id}/documents` | List Documents |  | list[DocumentOut] |
+| GET | `/api/applications/{application_id}/infrastructure` | Infrastructure |  | InfrastructureAdvisory |
+| POST | `/api/applications/{application_id}/inspections` | Add Inspection |  |  |
+| GET | `/api/applications/{application_id}/inspections` | List Inspections |  | list[InspectionOut] |
 | GET | `/api/applications/{application_id}/priority` | Get Priority |  | PriorityOut |
 | GET | `/api/applications/{application_id}/report` | Report |  | ReportOut |
 | GET | `/api/applications/{application_id}/runs` | Runs |  | list[ValidationRunOut] |
 | POST | `/api/applications/{application_id}/start-scrutiny` | Start Scrutiny |  | ApplicationOut |
 | POST | `/api/applications/{application_id}/submit` | Submit |  | ApplicationOut |
+| POST | `/api/applications/{application_id}/summary` | Case Summary |  | CaseSummary |
 | POST | `/api/applications/{application_id}/validate` | Validate |  | ValidationRunOut |
 | GET | `/api/applications/{application_id}/verifications` | List Verifications |  | list[VerificationOut] |
 | GET | `/api/applications/{application_id}/versions` | Versions |  | list[ApplicationVersionOut] |
@@ -27,6 +32,9 @@ Shapes are defined in docs/CONTRACTS.md and docs/schemas/*.json.
 | POST | `/api/auth/login` | Login | LoginRequest | TokenResponse |
 | GET | `/api/auth/me` | Me |  | UserOut |
 | GET | `/api/dashboard` | Get Dashboard |  | DashboardSummary |
+| GET | `/api/dashboard/expiry-forecast` | Expiry Forecast |  | ExpiryForecast |
+| GET | `/api/dashboard/senior` | Senior Overview |  | SeniorOverview |
+| GET | `/api/dashboard/time-saved` | Time Saved |  | TimeSaved |
 | GET | `/api/documents/{document_id}/fields` | Fields |  | list[ExtractedFieldOut] |
 | POST | `/api/documents/{document_id}/link` | Link |  | FileLinkOut |
 | POST | `/api/documents/{document_id}/verify` | Verify |  | VerificationOut |

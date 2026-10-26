@@ -130,7 +130,7 @@ manual_review. Never invent a result.
 | verification_requests | id, document_id, application_id, source, is_mock, reference_submitted, requested_at, status, submitted_values, source_values, mismatches, error |
 | review_actions | id, actor_id, target_type, target_id, action, reason, created_at |
 | audit_events | id (autoincrement), actor, event_type, target_type, target_id, payload, timestamp, prev_hash, hash |
-| inspection_records | id, application_id, inspector_id, notes, evidence_document_id?, created_at |
+| inspection_records | id, application_id, inspector_id, notes, evidence_document_id?, evidence_label?, created_at |
 | notifications | id, user_id, application_id?, kind, message, created_at, read_at? |
 
 ## Document types
@@ -168,6 +168,24 @@ Faculty lists also produce `faculty_count` and `faculty_ids` from table rows.
   Applicants get missing / expired / awaiting_correction; officers get anomaly / pending_verification.
 - Rules: `GET /api/rules`, `GET /api/rules/versions` (staff read); `POST /api/rules/validate`, `PUT /api/rules`
   (new version, reason required), `POST /api/rules/rerun` (admin + senior_authority only).
+
+## Cross-application intelligence (Phase 3)
+- XAPP-001 same file (SHA-256), XAPP-002 same certificate number, XAPP-003 >= 3 shared faculty IDs.
+- Compares only with OTHER institutions' applications that were submitted at least once.
+- Category `anomaly` (staff only), worded "may have a legitimate explanation".
+
+## Dashboards, inspector, letters, summary (Phase 3)
+- `GET /api/dashboard/expiry-forecast?days=N` (staff), `GET /api/dashboard/senior` (senior, admin),
+  `GET /api/dashboard/time-saved` (staff; returns its ASSUMPTION text).
+- Inspector evidence is an `application_documents` row with `doc_type = "inspection_evidence"`; it is excluded
+  from checklists, validation and cross-application checks. `POST /api/applications/{id}/inspections`
+  (inspector, escalated cases only), `GET .../inspections`, `GET .../infrastructure` (staff + inspector).
+  Labels come from `config/infrastructure.yaml` (ILLUSTRATIVE); the advisory reports presence only.
+- `POST /api/applications/{id}/deficiency-letter` (officer / senior): template DRAFT from applicant-visible open
+  findings only. Can be sent as the reason of `return_for_correction`.
+- `POST /api/applications/{id}/summary` (staff): optional LLM summary, `LLM_SUMMARY_ENABLED=false` by default.
+  Every point cites finding ids; uncited points are dropped; otherwise `insufficient_evidence = true`.
+  Never stored as a finding, never part of validation.
 
 ## Evidence pages
 - `POST /api/documents/{id}/link` also returns `page_url_template`, `pages`, `page_scale`.

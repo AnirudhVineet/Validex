@@ -53,13 +53,20 @@ files are marked `failed` with a clear reason and their checks show as "could no
    the printed date EXP-001 and the MOCK issuer's confirmation VER-002) -> **Mark scrutiny complete**.
 4. Open the **SYNTHETIC ... Mockingnagar** case in the queue: an altered fire NOC shows an issuer mismatch on the
    expiry date plus a preliminary indicator (PDF modified after creation).
-5. Log in as `senior@validex.demo` -> **Rule editor** -> change a value -> Validate -> Save as new version ->
+5. Open the **SYNTHETIC ... Trialwadi** case: the same land document and five faculty IDs also appear in another
+   institution's application (cross-application preliminary indicators). Try **Draft deficiency letter**.
+6. Log in as `inspector@validex.demo` -> open the flagged case -> add a note and an evidence file with a label.
+7. Log in as `senior@validex.demo` -> overview (status counts, ageing, common findings, expiry forecast,
+   time-saved estimate with its assumption) -> **Rule editor** -> change a value -> Validate -> Save as new version ->
    **Re-run on open cases** (old runs are kept).
-6. Log in as `admin@validex.demo` -> **Verify chain** on the audit log.
+8. Log in as `admin@validex.demo` -> **Verify chain** on the audit log.
 
-The seed also creates 17 SYNTHETIC applications in every status (expired NOC, missing document, name mismatch,
+Note: when automating the UI with headless Chrome, logging in through the form as the inspector can leave the
+tab without input focus (a browser prompt). Use a token login for automation; real browsers are unaffected.
+
+The seed also creates 18 SYNTHETIC applications in every status (expired NOC, missing document, name mismatch,
 TER pending, scanned NOC, intake increase without accreditation, altered NOC, signed PDF, issuer pending /
-timeout, same file in two slots, ...). `seed/output/manifest.json` lists the
+timeout, same file in two slots, documents shared with another institution, ...). `seed/output/manifest.json` lists the
 expected findings per document and scenario; `python seed/seed.py --reset` prints expected vs actual.
 
 ## Demo accounts (SYNTHETIC, password `demo1234`)
@@ -84,7 +91,7 @@ cd backend
 .venv/Scripts/python -m scripts.export_schemas   # writes docs/schemas/*.json and docs/api-contract.md
 ```
 
-## What is real vs MOCK / SYNTHETIC (after Phase 2)
+## What is real vs MOCK / SYNTHETIC (after Phase 3)
 | Part | Status |
 |---|---|
 | JWT login, 5 roles, backend role checks | Real |
@@ -99,6 +106,15 @@ cd backend
 | Anomaly indicators | Real, conservative, labelled "preliminary indicator", staff only |
 | ELA (JPEG only) | Implemented, but did not detect our simulated edits; weak signal (see docs/model-cards.md) |
 | Review-priority score, alerts, rule editor with versioning | Real |
+| Cross-application matches, expiry forecast, senior overview, deficiency letter (template) | Real |
+| Inspector notes / evidence and infrastructure advisory | Real; advisory = evidence present + labels read, no measurement |
+| Time-saved counter | ESTIMATE from stated assumptions (shown on screen), not measured |
+| LLM case summary (Claude, `claude-opus-5-5`) | Optional, OFF by default; cites finding ids; never used for validation |
+
+### Optional LLM summary
+Set `LLM_SUMMARY_ENABLED=true` and provide Anthropic credentials (`ANTHROPIC_API_KEY`) in the backend environment.
+The call uses structured JSON output and server-side refusal fallbacks (`fallbacks: "default"`). Only stored
+finding text is sent (synthetic data); without credentials the panel shows "Summary unavailable".
 
 ## Security notes (only what is implemented)
 - Passwords hashed with bcrypt. JWT (HS256) with an 8 hour expiry; set `JWT_SECRET` for any shared deployment.

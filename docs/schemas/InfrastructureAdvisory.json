@@ -1,0 +1,69 @@
+{
+  "$defs": {
+    "AdvisoryItem": {
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "evidence_files": {
+          "title": "Evidence Files",
+          "type": "integer"
+        },
+        "present": {
+          "title": "Present",
+          "type": "boolean"
+        },
+        "labels_read_from_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels Read From Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "evidence_files",
+        "present",
+        "labels_read_from_evidence"
+      ],
+      "title": "AdvisoryItem",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "notice": {
+      "title": "Notice",
+      "type": "string"
+    },
+    "illustrative": {
+      "title": "Illustrative",
+      "type": "boolean"
+    },
+    "ocr_available": {
+      "title": "Ocr Available",
+      "type": "boolean"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/AdvisoryItem"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "notice",
+    "illustrative",
+    "ocr_available",
+    "items"
+  ],
+  "title": "InfrastructureAdvisory",
+  "type": "object"
+}

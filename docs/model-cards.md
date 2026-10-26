@@ -69,7 +69,21 @@ vary far more. Phase 4 adds a fuller evaluation in `docs/eval-results.md`.
 - Presence only (signature field or /ByteRange). Reported as "signature present, not validated".
   No signature or certificate-chain validation is implemented.
 
-## 9. Review-priority score
+## 9. Cross-application matching (XAPP-001..003)
+- Exact file hash, exact certificate number, and >= 3 shared faculty IDs across *different* institutions.
+- Deterministic; no fuzzy matching across institutions. False-positive sources: shared campus land,
+  faculty who moved, template-issued certificates. Reported as preliminary indicators only.
+
+## 10. Optional LLM case summary (off by default)
+- **Purpose:** a short readable digest of already-computed findings for the officer.
+- **Model:** Claude (`claude-opus-5-5`), structured JSON output, server-side refusal fallbacks.
+- **Grounding:** input is the stored findings only; every output point must cite finding ids; points citing
+  unknown ids are dropped; empty / declined -> "insufficient evidence". Never stored as a finding and never
+  influences validation, statuses or the priority score.
+- **Limits:** can still paraphrase a finding imperfectly - officers read the cited findings, not the summary.
+  Not evaluated on real data.
+
+## 11. Review-priority score
 - Weighted count of open findings (critical 25, high 12, medium 5, low 2), +8 per anomaly indicator,
   +6 per verification issue, +3 per document with incomplete checks, +1 per day waiting (max 10); capped at 100.
 - A queue-ordering aid with its full breakdown shown. **Not a probability** and not a compliance judgement.

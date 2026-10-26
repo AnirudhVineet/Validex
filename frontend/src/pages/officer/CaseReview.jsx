@@ -5,6 +5,7 @@ import { useAuth } from "../../auth/AuthContext.jsx";
 import { DocumentPanel } from "../../components/Documents.jsx";
 import { FindingsList, IncompleteChecks, SeveritySummary } from "../../components/Findings.jsx";
 import Layout from "../../components/Layout.jsx";
+import { InspectionPanel, LetterPanel, SummaryPanel } from "../../components/CaseTools.jsx";
 import { PriorityPanel, VerificationPanel } from "../../components/ReviewTools.jsx";
 import { Badge, Button, Card, ErrorText, Notice, ReasonForm, formatDate, useAsync } from "../../components/ui.jsx";
 
@@ -138,6 +139,14 @@ export default function CaseReview({ basePath }) {
         <div className="space-y-4">
           <Card title="Decision"><Decisions app={app} role={user.role} onDone={load} /></Card>
           <Card title="Review priority (aid only)"><PriorityPanel priority={report.priority} /></Card>
+          {user.role !== "admin" && (
+            <Card title="Deficiency letter (draft)">
+              <LetterPanel app={app} onReturned={load}
+                canReturn={(user.role === "scrutiny_officer" && app.status === "under_scrutiny") || (user.role === "senior_authority" && ["under_scrutiny", "escalated"].includes(app.status))} />
+            </Card>
+          )}
+          <Card title="Case summary (optional AI)"><SummaryPanel app={app} findings={report.findings} /></Card>
+          <Card title="Inspection and infrastructure advisory"><InspectionPanel app={app} canAdd={false} /></Card>
           <Card title="Institute record"><InstituteRecord inst={inst} /></Card>
           <Card title="Checklist">
             <ul className="space-y-1 text-sm">

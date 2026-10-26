@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "CommonDeficiency": {
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "applications": {
+          "title": "Applications",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "rule_id",
+        "description",
+        "applications"
+      ],
+      "title": "CommonDeficiency",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "status_counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Status Counts",
+      "type": "object"
+    },
+    "ageing": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Ageing",
+      "type": "object"
+    },
+    "common_deficiencies": {
+      "items": {
+        "$ref": "#/$defs/CommonDeficiency"
+      },
+      "title": "Common Deficiencies",
+      "type": "array"
+    },
+    "open_applications": {
+      "title": "Open Applications",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "status_counts",
+    "ageing",
+    "common_deficiencies",
+    "open_applications"
+  ],
+  "title": "SeniorOverview",
+  "type": "object"
+}

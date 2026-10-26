@@ -1,0 +1,31 @@
+{
+  "properties": {
+    "minutes": {
+      "title": "Minutes",
+      "type": "integer"
+    },
+    "hours": {
+      "title": "Hours",
+      "type": "number"
+    },
+    "inputs": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Inputs",
+      "type": "object"
+    },
+    "assumption": {
+      "title": "Assumption",
+      "type": "string"
+    }
+  },
+  "required": [
+    "minutes",
+    "hours",
+    "inputs",
+    "assumption"
+  ],
+  "title": "TimeSaved",
+  "type": "object"
+}
