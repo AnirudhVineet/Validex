@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { api } from "../api/client.js";
+import EvidenceViewer from "./EvidenceViewer.jsx";
 import { Badge, ReasonForm } from "./ui.jsx";
 
 const REVIEW_ACTIONS = [
@@ -26,7 +28,32 @@ function evidenceText(evidence) {
   return parts.join(" · ");
 }
 
-export function FindingCard({ finding, docLabel, canReview, onChanged }) {
+// Explainability: what was checked, what was found vs expected, which rule, what to do next.
+function Explanation({ finding, rule }) {
+  return (
+    <div className="mt-3 grid gap-3 rounded border border-sky-100 bg-sky-50/50 p-3 lg:grid-cols-2">
+      <dl className="space-y-1">
+        <Row label="What was checked">{rule?.description || finding.rule_id}</Row>
+        <Row label="Rule">{`${finding.rule_id} v${finding.rule_version}${rule ? ` (${rule.check}, ${rule.category})` : ""}`}</Row>
+        <Row label="Found">{finding.found_value}</Row>
+        <Row label="Expected">{finding.expected_value}</Row>
+        <Row label="Why flagged">{finding.explanation}</Row>
+        <Row label="Next step">{finding.suggested_action}</Row>
+        {finding.category === "anomaly" && (
+          <p className="text-xs text-amber-800">Preliminary indicator only. Requires manual review; it may have a legitimate explanation.</p>
+        )}
+      </dl>
+      <div>
+        {finding.document_id
+          ? <EvidenceViewer documentId={finding.document_id} page={finding.evidence?.page} bbox={finding.evidence?.bbox} />
+          : <p className="text-sm text-slate-500">This finding is not tied to a document region (e.g. missing document or institute record).</p>}
+      </div>
+    </div>
+  );
+}
+
+export function FindingCard({ finding, docLabel, rule, canReview, onChanged }) {
+  const [open, setOpen] = useState(false);
   async function review(action, reason) {
     await api(`/findings/${finding.id}/review`, { method: "POST", body: { action, reason } });
     onChanged?.();
@@ -34,9 +61,11 @@ export function FindingCard({ finding, docLabel, canReview, onChanged }) {
   const reviewable = canReview && finding.status === "open";
 
   return (
-    <article className="rounded border border-slate-200 p-3">
+    <article className={`rounded border p-3 ${open ? "border-sky-300" : "border-slate-200"}`}>
       <header className="flex flex-wrap items-center gap-2">
         <Badge value={finding.severity} kind="severity" />
+        {finding.category === "anomaly" && <Badge value="anomaly indicator" />}
+        {finding.category === "verification" && <Badge value="issuer check (MOCK)" />}
         <span className="font-medium">{finding.title}</span>
         <span className="ml-auto flex items-center gap-2 text-xs text-slate-500">
           {finding.rule_id} v{finding.rule_version} <Badge value={finding.status} />
@@ -47,10 +76,14 @@ export function FindingCard({ finding, docLabel, canReview, onChanged }) {
         <Row label="Found">{finding.found_value}</Row>
         <Row label="Expected">{finding.expected_value}</Row>
         <Row label="Evidence">{evidenceText(finding.evidence)}</Row>
-        <Row label="Why">{finding.explanation}</Row>
-        <Row label="Suggested action">{finding.suggested_action}</Row>
         <Row label="Review note">{finding.review_reason}</Row>
       </dl>
+      <div className="mt-2 flex flex-wrap items-start gap-2">
+        <button className="text-sm text-sky-700 hover:underline" onClick={() => setOpen(!open)}>
+          {open ? "Hide evidence and explanation" : "Show evidence and explanation"}
+        </button>
+      </div>
+      {open && <Explanation finding={finding} rule={rule} />}
       {reviewable && (
         <div className="mt-3 flex flex-wrap gap-2">
           {REVIEW_ACTIONS.map((a) => (
@@ -62,13 +95,16 @@ export function FindingCard({ finding, docLabel, canReview, onChanged }) {
   );
 }
 
-export function FindingsList({ findings, documents, canReview, onChanged }) {
+export function FindingsList({ findings, documents, rules, canReview, onChanged }) {
   const labels = Object.fromEntries((documents || []).map((d) => [d.id, d.doc_type.replaceAll("_", " ")]));
   if (!findings.length) return <p className="text-sm text-slate-500">No findings in this run.</p>;
   return (
     <div className="space-y-3">
       {findings.map((f) => (
-        <FindingCard key={f.id} finding={f} docLabel={labels[f.document_id]} canReview={canReview} onChanged={onChanged} />
+        <FindingCard
+          key={f.id} finding={f} docLabel={labels[f.document_id]} rule={rules?.[f.rule_id]}
+          canReview={canReview} onChanged={onChanged}
+        />
       ))}
     </div>
   );

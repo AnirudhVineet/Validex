@@ -13,6 +13,7 @@ import argparse
 import json
 import shutil
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -26,7 +27,9 @@ from app.db import SessionLocal, create_all, drop_all  # noqa: E402
 from app.enums import ApplicationCategory, Role  # noqa: E402
 from app.models import Application, Finding, Institution, User  # noqa: E402
 from app.services import applications as app_svc  # noqa: E402
-from app.services import audit  # noqa: E402
+from app.services import alerts, audit  # noqa: E402
+from app.services.extraction.words import ocr_available  # noqa: E402
+from app.services.verification import verify_application  # noqa: E402
 from app.services.auth import hash_password  # noqa: E402
 from app.services.documents import upload_document  # noqa: E402
 from app.services.rules.loader import get_checklist, get_rule_set  # noqa: E402
@@ -85,12 +88,16 @@ def seed_users_and_demo_institution() -> None:
         db.close()
 
 
-def _drive_to_target(db, app: Application, target: str, applicant: User, officer: User) -> None:
+def _drive_to_target(db, app: Application, spec: dict, applicant: User, officer: User) -> None:
     """Move a seeded application to its scenario status using the real workflow services."""
+    target = spec["target_status"]
     if target == "draft":
         run_validation(db, applicant, app, precheck=True)
         return
     app_svc.submit(db, applicant, app)
+    for req in verify_application(db, app, applicant.id):
+        if spec.get("backdate_pending_hours") and req.status.value == "pending":
+            req.requested_at = req.requested_at - timedelta(hours=spec["backdate_pending_hours"])
     run_validation(db, applicant, app, precheck=False, skip_permission=True)
     if target == "submitted":
         return
@@ -131,9 +138,12 @@ def seed_institutions_and_applications() -> list[dict]:
             for doc in spec["documents"]:
                 data = (OUTPUT_DIR / doc["file"]).read_bytes()
                 upload_document(db, applicant, app, doc["doc_type"], Path(doc["file"]).name, data)
-            _drive_to_target(db, app, spec["target_status"], applicant, officer)
+            _drive_to_target(db, app, spec, applicant, officer)
             db.commit()
-            results.append({"scenario": spec["scenario"], "app": app, "expected": spec["expected_rule_ids"]})
+            results.append({"scenario": spec["scenario"], "app": app, "expected": spec["expected_rule_ids"],
+                            "needs_ocr": spec.get("needs_ocr", False)})
+        alerts.pending_verifications(db)
+        db.commit()
         return results
     finally:
         db.close()
@@ -150,6 +160,9 @@ def _report(results: list[dict]) -> None:
             run = latest_run(db, r["app"], include_precheck=True)
             actual = sorted({f.rule_id for f in db.execute(select(Finding).where(
                 Finding.validation_run_id == run.id)).scalars() if f.severity.value != "info"})
+            if r["needs_ocr"] and not ocr_available():
+                print(f"  [skip] {r['scenario']:34} needs Tesseract (OCR); run in Docker for the full result")
+                continue
             mark = "ok  " if actual == sorted(r["expected"]) else "DIFF"
             print(f"  [{mark}] {r['scenario']:34} expected={sorted(r['expected'])} actual={actual} "
                   f"incomplete={len(run.incomplete_checks)}")

@@ -1,0 +1,61 @@
+{
+  "$defs": {
+    "PriorityFactor": {
+      "properties": {
+        "factor": {
+          "title": "Factor",
+          "type": "string"
+        },
+        "points": {
+          "title": "Points",
+          "type": "integer"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "factor",
+        "points",
+        "detail"
+      ],
+      "title": "PriorityFactor",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "score": {
+      "title": "Score",
+      "type": "integer"
+    },
+    "max": {
+      "title": "Max",
+      "type": "integer"
+    },
+    "raw_points": {
+      "title": "Raw Points",
+      "type": "integer"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "factors": {
+      "items": {
+        "$ref": "#/$defs/PriorityFactor"
+      },
+      "title": "Factors",
+      "type": "array"
+    }
+  },
+  "required": [
+    "score",
+    "max",
+    "raw_points",
+    "description",
+    "factors"
+  ],
+  "title": "PriorityOut",
+  "type": "object"
+}

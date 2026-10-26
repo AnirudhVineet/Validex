@@ -8,6 +8,8 @@ import Login from "./pages/Login.jsx";
 import CaseReview from "./pages/officer/CaseReview.jsx";
 import Queue from "./pages/officer/Queue.jsx";
 import ReportPage from "./pages/ReportPage.jsx";
+import RuleEditor from "./pages/RuleEditor.jsx";
+import RuleViewer from "./pages/RuleViewer.jsx";
 
 // Client-side guard is for UX only. The backend enforces every permission.
 function RequireRole({ roles, children }) {
@@ -38,6 +40,9 @@ export default function App() {
 
       <Route path="/inspector" element={guarded(["inspector"], <Dashboard role="inspector" />)} />
       <Route path="/admin" element={guarded(["admin"], <AdminHome />)} />
+      <Route path="/admin/rules" element={guarded(["admin"], <RuleEditor />)} />
+      <Route path="/senior/rules" element={guarded(["senior_authority"], <RuleEditor />)} />
+      <Route path="/officer/rules" element={guarded(["scrutiny_officer"], <RuleViewer />)} />
 
       <Route path="/applications/:id/report" element={guarded(null, <ReportPage />)} />
       <Route path="*" element={<Navigate to="/login" replace />} />

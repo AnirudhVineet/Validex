@@ -83,6 +83,18 @@
       "default": 0,
       "title": "Critical Findings",
       "type": "integer"
+    },
+    "priority_score": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Priority Score"
     }
   },
   "required": [

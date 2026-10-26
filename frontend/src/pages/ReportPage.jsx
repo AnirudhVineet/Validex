@@ -60,7 +60,7 @@ export default function ReportPage() {
           <div className="space-y-3">
             <SeveritySummary summary={report.summary} />
             <IncompleteChecks items={report.incomplete_checks} />
-            <FindingsList findings={report.findings} documents={report.documents} />
+            <FindingsList findings={report.findings} documents={report.documents} rules={report.rules} />
           </div>
         ) : <p className="text-sm text-slate-500">No validation run yet.</p>}
       </Card>

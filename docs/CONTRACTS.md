@@ -122,7 +122,7 @@ manual_review. Never invent a result.
 | institutions | id, name, address, aicte_ref (fictional), state, prior_eoa_year, approved_intake, faculty_count, deficiency_status, ter_payment_status, is_synthetic |
 | applications | id, institution_id, category, academic_year, status, current_version, form_data (json, e.g. requested_intake), created_by, created_at, submitted_at, updated_at |
 | application_versions | id, application_id, version, submitted_by, submitted_at, snapshot (json) |
-| application_documents | id, application_id, version, doc_type, original_filename, sha256, size_bytes, mime_type, storage_path, status, is_current, classified_type, extraction_method (pdf_text/ocr), extraction_error, uploaded_by, uploaded_at |
+| application_documents | id, application_id, version, doc_type, original_filename, sha256, size_bytes, mime_type, storage_path, status, is_current, classified_type, extraction_method (pdf_text/ocr), extraction_error, analysis (json: qr, page_hashes, pdf, ela), uploaded_by, uploaded_at |
 | extracted_fields | id, document_id, field_name, value, confidence, page, bbox (json), source, needs_confirmation, corrected_by?, corrected_at? |
 | rule_set_versions | id, kind (rules / checklist), name, version (int), content_yaml, content_hash, is_active, created_by, created_at |
 | validation_runs | id, application_id, application_version, rule_set_version, checklist_version, is_precheck, status, incomplete_checks (json), started_by, started_at, finished_at |
@@ -147,6 +147,31 @@ Faculty lists also produce `faculty_count` and `faculty_ids` from table rows.
 - `mark_scrutiny_complete` is refused while the latest official run has open critical/high findings.
 - Re-running validation copies the review status of identical findings (same rule, document, found value).
 - If a check cannot run (e.g. OCR unavailable), it is recorded in `incomplete_checks`, never guessed.
+
+## Verification (all sources MOCK)
+- Issuers per doc type: fire_noc -> MOCK-FIRE, accreditation_certificate -> MOCK-ACCREDITATION,
+  land_document -> MOCK-LAND-REGISTRY. Affidavit and faculty list have no issuer (not verified).
+- Reference: QR `ref` first, else extracted `certificate_number`, else `manual_review`.
+- Runs automatically on submit; officers can re-verify (`POST /api/documents/{id}/verify`), which also
+  re-runs official validation. Results feed rules VER-001..004 (staff only).
+- Connector interface: `app/services/verification/connectors.py` (`IssuerConnector.lookup(ref)` returns a
+  record, None when unknown, or raises `SourceUnavailable`).
+
+## Anomaly indicators and signals
+- Upload-time signals in `ApplicationDocument.analysis`; rules ANO-001..006 and SIG-001 turn them into
+  findings. Category `anomaly` is always `visible_to_applicant = false`; titles start with
+  "Preliminary indicator". See docs/model-cards.md for thresholds and limits.
+
+## Review priority, alerts, rule editing
+- `GET /api/applications/{id}/priority` -> `{score, max, raw_points, description, factors[]}`; staff only.
+- Notification kinds: missing, expired, pending_verification, anomaly, awaiting_correction.
+  Applicants get missing / expired / awaiting_correction; officers get anomaly / pending_verification.
+- Rules: `GET /api/rules`, `GET /api/rules/versions` (staff read); `POST /api/rules/validate`, `PUT /api/rules`
+  (new version, reason required), `POST /api/rules/rerun` (admin + senior_authority only).
+
+## Evidence pages
+- `POST /api/documents/{id}/link` also returns `page_url_template`, `pages`, `page_scale`.
+  PNG pixel = bbox unit x `page_scale` (2.0 for PDFs, 1.0 for images).
 
 ## Rules and checklists
 - Seeded from `backend/config/rules/*.yaml` and `backend/config/checklists/*.yaml` (marked ILLUSTRATIVE).

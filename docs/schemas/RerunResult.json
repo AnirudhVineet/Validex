@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "rule_set_version": {
+      "title": "Rule Set Version",
+      "type": "string"
+    },
+    "applications_rerun": {
+      "title": "Applications Rerun",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "rule_set_version",
+    "applications_rerun"
+  ],
+  "title": "RerunResult",
+  "type": "object"
+}

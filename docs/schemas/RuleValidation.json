@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    },
+    "errors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Errors",
+      "type": "array"
+    },
+    "rule_count": {
+      "title": "Rule Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "valid",
+    "errors",
+    "rule_count"
+  ],
+  "title": "RuleValidation",
+  "type": "object"
+}

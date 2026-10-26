@@ -20,6 +20,7 @@ export class ApiError extends Error {
 function errorMessage(data, res) {
   if (typeof data?.detail === "string") return data.detail;
   if (Array.isArray(data?.detail)) return data.detail.map((d) => d.msg).join("; ");
+  if (data?.detail?.errors) return `${data.detail.message}: ${data.detail.errors.join("; ")}`;
   return res.statusText || "Request failed";
 }
 

@@ -1,0 +1,36 @@
+{
+  "$defs": {
+    "FindingCategory": {
+      "enum": [
+        "completeness",
+        "expiry",
+        "consistency",
+        "anomaly",
+        "verification",
+        "infrastructure"
+      ],
+      "title": "FindingCategory",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "category": {
+      "$ref": "#/$defs/FindingCategory"
+    },
+    "check": {
+      "title": "Check",
+      "type": "string"
+    }
+  },
+  "required": [
+    "description",
+    "category",
+    "check"
+  ],
+  "title": "RuleInfo",
+  "type": "object"
+}

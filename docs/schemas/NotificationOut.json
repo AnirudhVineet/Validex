@@ -1,0 +1,54 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "application_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Application Id"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "read_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Read At"
+    }
+  },
+  "required": [
+    "id",
+    "application_id",
+    "kind",
+    "message",
+    "created_at",
+    "read_at"
+  ],
+  "title": "NotificationOut",
+  "type": "object"
+}

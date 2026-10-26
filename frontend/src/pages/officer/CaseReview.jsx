@@ -5,6 +5,7 @@ import { useAuth } from "../../auth/AuthContext.jsx";
 import { DocumentPanel } from "../../components/Documents.jsx";
 import { FindingsList, IncompleteChecks, SeveritySummary } from "../../components/Findings.jsx";
 import Layout from "../../components/Layout.jsx";
+import { PriorityPanel, VerificationPanel } from "../../components/ReviewTools.jsx";
 import { Badge, Button, Card, ErrorText, Notice, ReasonForm, formatDate, useAsync } from "../../components/ui.jsx";
 
 function InstituteRecord({ inst }) {
@@ -116,9 +117,13 @@ export default function CaseReview({ basePath }) {
                 <SeveritySummary summary={report.summary} />
                 <IncompleteChecks items={report.incomplete_checks} />
                 {app.status === "submitted" && <Notice>Start scrutiny to review findings.</Notice>}
-                <FindingsList findings={report.findings} documents={report.documents} canReview={reviewing} onChanged={load} />
+                <FindingsList findings={report.findings} documents={report.documents} rules={report.rules} canReview={reviewing} onChanged={load} />
               </div>
             ) : <p className="text-sm text-slate-500">No validation run yet.</p>}
+          </Card>
+
+          <Card title="Issuer verification: submitted value vs source value">
+            <VerificationPanel verifications={report.verifications} canVerify={canRevalidate && user.role !== "admin"} onChanged={load} />
           </Card>
 
           <Card title="Documents and extracted values">
@@ -132,6 +137,7 @@ export default function CaseReview({ basePath }) {
 
         <div className="space-y-4">
           <Card title="Decision"><Decisions app={app} role={user.role} onDone={load} /></Card>
+          <Card title="Review priority (aid only)"><PriorityPanel priority={report.priority} /></Card>
           <Card title="Institute record"><InstituteRecord inst={inst} /></Card>
           <Card title="Checklist">
             <ul className="space-y-1 text-sm">

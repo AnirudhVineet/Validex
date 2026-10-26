@@ -291,6 +291,43 @@
       "title": "ExtractionSource",
       "type": "string"
     },
+    "FieldMismatch": {
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "submitted": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Submitted"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source"
+        }
+      },
+      "required": [
+        "field",
+        "submitted",
+        "source"
+      ],
+      "title": "FieldMismatch",
+      "type": "object"
+    },
     "FindingCategory": {
       "enum": [
         "completeness",
@@ -567,6 +604,65 @@
       "title": "InstitutionOut",
       "type": "object"
     },
+    "PriorityFactor": {
+      "properties": {
+        "factor": {
+          "title": "Factor",
+          "type": "string"
+        },
+        "points": {
+          "title": "Points",
+          "type": "integer"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "factor",
+        "points",
+        "detail"
+      ],
+      "title": "PriorityFactor",
+      "type": "object"
+    },
+    "PriorityOut": {
+      "properties": {
+        "score": {
+          "title": "Score",
+          "type": "integer"
+        },
+        "max": {
+          "title": "Max",
+          "type": "integer"
+        },
+        "raw_points": {
+          "title": "Raw Points",
+          "type": "integer"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "factors": {
+          "items": {
+            "$ref": "#/$defs/PriorityFactor"
+          },
+          "title": "Factors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "score",
+        "max",
+        "raw_points",
+        "description",
+        "factors"
+      ],
+      "title": "PriorityOut",
+      "type": "object"
+    },
     "ReportDocument": {
       "properties": {
         "id": {
@@ -648,6 +744,28 @@
         "fields"
       ],
       "title": "ReportDocument",
+      "type": "object"
+    },
+    "RuleInfo": {
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/FindingCategory"
+        },
+        "check": {
+          "title": "Check",
+          "type": "string"
+        }
+      },
+      "required": [
+        "description",
+        "category",
+        "check"
+      ],
+      "title": "RuleInfo",
       "type": "object"
     },
     "Severity": {
@@ -735,6 +853,96 @@
       ],
       "title": "ValidationRunOut",
       "type": "object"
+    },
+    "VerificationOut": {
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "is_mock": {
+          "title": "Is Mock",
+          "type": "boolean"
+        },
+        "reference_submitted": {
+          "title": "Reference Submitted",
+          "type": "string"
+        },
+        "requested_at": {
+          "format": "date-time",
+          "title": "Requested At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/VerificationStatus"
+        },
+        "submitted_values": {
+          "title": "Submitted Values",
+          "type": "object"
+        },
+        "source_values": {
+          "title": "Source Values",
+          "type": "object"
+        },
+        "mismatches": {
+          "items": {
+            "$ref": "#/$defs/FieldMismatch"
+          },
+          "title": "Mismatches",
+          "type": "array"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "doc_type": {
+          "title": "Doc Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "is_mock",
+        "reference_submitted",
+        "requested_at",
+        "status",
+        "submitted_values",
+        "source_values",
+        "mismatches",
+        "error",
+        "id",
+        "document_id",
+        "doc_type"
+      ],
+      "title": "VerificationOut",
+      "type": "object"
+    },
+    "VerificationStatus": {
+      "enum": [
+        "verified",
+        "mismatch",
+        "expired",
+        "pending",
+        "source_unavailable",
+        "manual_review"
+      ],
+      "title": "VerificationStatus",
+      "type": "string"
     }
   },
   "properties": {
@@ -796,6 +1004,34 @@
       "title": "Documents",
       "type": "array"
     },
+    "rules": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RuleInfo"
+      },
+      "description": "What each rule in this run checks (explainability)",
+      "title": "Rules",
+      "type": "object"
+    },
+    "verifications": {
+      "description": "Staff only; empty for applicants",
+      "items": {
+        "$ref": "#/$defs/VerificationOut"
+      },
+      "title": "Verifications",
+      "type": "array"
+    },
+    "priority": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PriorityOut"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Staff only"
+    },
     "disclaimer": {
       "title": "Disclaimer",
       "type": "string"
@@ -811,6 +1047,7 @@
     "checklist",
     "missing_form_fields",
     "documents",
+    "rules",
     "disclaimer"
   ],
   "title": "ReportOut",

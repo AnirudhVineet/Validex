@@ -134,7 +134,7 @@ export default function ApplicationWorkspace() {
               </p>
               <SeveritySummary summary={report.summary} />
               <IncompleteChecks items={report.incomplete_checks} />
-              <FindingsList findings={report.findings} documents={report.documents} />
+              <FindingsList findings={report.findings} documents={report.documents} rules={report.rules} />
             </div>
           ) : (
             <p className="text-sm text-slate-500">Run a pre-check to see what the automated checks find before you submit.</p>

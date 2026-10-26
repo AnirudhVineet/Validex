@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "content_yaml": {
+      "minLength": 1,
+      "title": "Content Yaml",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "content_yaml",
+    "reason"
+  ],
+  "title": "RuleSave",
+  "type": "object"
+}

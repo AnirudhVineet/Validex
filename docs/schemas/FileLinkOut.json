@@ -7,11 +7,28 @@
     "expires_in_seconds": {
       "title": "Expires In Seconds",
       "type": "integer"
+    },
+    "page_url_template": {
+      "description": "Replace {page} with a 1-based page number to get a PNG",
+      "title": "Page Url Template",
+      "type": "string"
+    },
+    "pages": {
+      "title": "Pages",
+      "type": "integer"
+    },
+    "page_scale": {
+      "description": "PNG pixels per bbox unit (PDF points, or pixels for images)",
+      "title": "Page Scale",
+      "type": "number"
     }
   },
   "required": [
     "url",
-    "expires_in_seconds"
+    "expires_in_seconds",
+    "page_url_template",
+    "pages",
+    "page_scale"
   ],
   "title": "FileLinkOut",
   "type": "object"

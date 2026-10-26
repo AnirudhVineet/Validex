@@ -6,7 +6,7 @@ Output (git-ignored):    seed/output/
   applications/<scenario>/<doc_type>__<variant>.pdf
   demo_upload/<doc_type>__<variant>.pdf      (for the demo applicant to upload live)
   manifest.json                              (truth values + expected rule ids per document / scenario)
-  mock_issuer_data.json                      (MOCK issuer records for QR references; used in Phase 2)
+  mock_issuer_data.json                      (MOCK issuer records for QR references)
 """
 import json
 import random
@@ -27,7 +27,8 @@ def _inst_data(inst: dict) -> InstitutionData:
     return InstitutionData(inst["name"], inst["address"], inst["aicte_ref"], inst["state"], inst["faculty_count"])
 
 
-def _write(path: Path, gen, inst: dict, manifest: list, issuer_records: dict, scenario: str | None) -> None:
+def _write(path: Path, gen, inst: dict, manifest: list, issuer_records: dict, scenario: str | None,
+           issuer_sim: dict | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(gen.pdf)
     manifest.append({
@@ -39,8 +40,10 @@ def _write(path: Path, gen, inst: dict, manifest: list, issuer_records: dict, sc
         # The MOCK issuer holds what it actually issued: the real institution name, even when the
         # document copy shows another name (name_mismatch variant).
         issuer_records[gen.qr_ref] = {
-            "issuer": gen.issuer, "is_mock": True, "institution_name": inst["name"],
+            "issuer": gen.issuer, "is_mock": True, "institution_name": inst["name"], "status": "valid",
             **{k: v for k, v in gen.truth.items() if k in ("certificate_number", "issue_date", "expiry_date")},
+            **gen.issuer_overrides,     # e.g. the real expiry for an "altered" document
+            **(issuer_sim or {}),       # e.g. {"status": "pending"} or {"simulate": "timeout"}
         }
 
 
@@ -61,15 +64,20 @@ def generate_all(today: date | None = None, out_dir: Path = OUTPUT_DIR) -> dict:
                 faculty = round(inst["faculty_count"] * sc["faculty_ratio"])
             gen = make_document(doc_type, variant, _inst_data(inst), today, rng, faculty_count=faculty)
             path = out_dir / "applications" / sc["key"] / f"{doc_type}__{variant}.pdf"
-            _write(path, gen, inst, documents, issuer_records, sc["key"])
+            _write(path, gen, inst, documents, issuer_records, sc["key"], sc.get("issuer_sim", {}).get(doc_type))
             files.append({"doc_type": doc_type, "file": path.relative_to(out_dir).as_posix()})
+        if sc.get("duplicate"):  # the same file uploaded into a second slot
+            src = next(f for f in files if f["doc_type"] == sc["duplicate"]["from"])
+            files = [f for f in files if f["doc_type"] != sc["duplicate"]["to"]]
+            files.append({"doc_type": sc["duplicate"]["to"], "file": src["file"]})
         form_data = {}
         if sc.get("form_data_increase"):
             form_data["requested_intake"] = inst["approved_intake"] + sc["form_data_increase"]
         applications.append({"scenario": sc["key"], "institution_ref": inst["aicte_ref"],
                              "category": sc["category"], "form_data": form_data, "documents": files,
                              "target_status": sc["target"], "expected_rule_ids": sc["expected"],
-                             "note": sc.get("note")})
+                             "needs_ocr": sc.get("needs_ocr", False),
+                             "backdate_pending_hours": sc.get("backdate_pending_hours"), "note": sc.get("note")})
 
     demo = institutions[0]
     for doc_type, variant in DEMO_UPLOADS:

@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "content_yaml": {
+      "minLength": 1,
+      "title": "Content Yaml",
+      "type": "string"
+    }
+  },
+  "required": [
+    "content_yaml"
+  ],
+  "title": "RuleText",
+  "type": "object"
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../api/client.js";
 import Layout from "../../components/Layout.jsx";
+import { AlertsPanel } from "../../components/ReviewTools.jsx";
 import { Badge, Button, Card, ErrorText, Notice, formatDate } from "../../components/ui.jsx";
 
 const CATEGORIES = [
@@ -67,6 +68,8 @@ export default function ApplicantHome() {
       <p className="mt-1 text-slate-600">Upload documents, run a pre-check to catch problems early, then submit.</p>
       <div className="mt-4"><Notice>Checklists are ILLUSTRATIVE for this prototype and are not the official AICTE requirement list.</Notice></div>
       <ErrorText error={error} />
+
+      <Card title="Alerts" className="mt-4"><AlertsPanel appBasePath="/applicant" /></Card>
 
       <Card title="Applications" className="mt-4">
         {!apps && <p className="text-sm text-slate-500">Loading...</p>}

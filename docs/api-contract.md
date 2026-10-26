@@ -14,11 +14,13 @@ Shapes are defined in docs/CONTRACTS.md and docs/schemas/*.json.
 | POST | `/api/applications/{application_id}/decision` | Decision | DecisionRequest | ApplicationOut |
 | POST | `/api/applications/{application_id}/documents` | Upload |  |  |
 | GET | `/api/applications/{application_id}/documents` | List Documents |  | list[DocumentOut] |
+| GET | `/api/applications/{application_id}/priority` | Get Priority |  | PriorityOut |
 | GET | `/api/applications/{application_id}/report` | Report |  | ReportOut |
 | GET | `/api/applications/{application_id}/runs` | Runs |  | list[ValidationRunOut] |
 | POST | `/api/applications/{application_id}/start-scrutiny` | Start Scrutiny |  | ApplicationOut |
 | POST | `/api/applications/{application_id}/submit` | Submit |  | ApplicationOut |
 | POST | `/api/applications/{application_id}/validate` | Validate |  | ValidationRunOut |
+| GET | `/api/applications/{application_id}/verifications` | List Verifications |  | list[VerificationOut] |
 | GET | `/api/applications/{application_id}/versions` | Versions |  | list[ApplicationVersionOut] |
 | GET | `/api/audit` | List Events |  | list[AuditEventOut] |
 | GET | `/api/audit/verify` | Verify |  | ChainVerifyResult |
@@ -27,9 +29,17 @@ Shapes are defined in docs/CONTRACTS.md and docs/schemas/*.json.
 | GET | `/api/dashboard` | Get Dashboard |  | DashboardSummary |
 | GET | `/api/documents/{document_id}/fields` | Fields |  | list[ExtractedFieldOut] |
 | POST | `/api/documents/{document_id}/link` | Link |  | FileLinkOut |
+| POST | `/api/documents/{document_id}/verify` | Verify |  | VerificationOut |
 | PATCH | `/api/fields/{field_id}` | Correct | FieldCorrection | ExtractedFieldOut |
 | POST | `/api/findings/{finding_id}/review` | Review Finding | ReviewRequest | FindingOut |
 | GET | `/api/health` | Health |  | object |
+| GET | `/api/notifications` | List Notifications |  | list[NotificationOut] |
+| POST | `/api/notifications/{notification_id}/read` | Mark Read |  | NotificationOut |
+| GET | `/api/rules` | Active Rules |  | RuleSetDetail |
+| PUT | `/api/rules` | Save Rules | RuleSave | RuleSetDetail |
+| POST | `/api/rules/rerun` | Rerun |  | RerunResult |
+| POST | `/api/rules/validate` | Validate Rules | RuleText | RuleValidation |
+| GET | `/api/rules/versions` | Rule Versions |  | list[RuleSetVersionOut] |
 | GET | `/api/users` | List Users |  | list[UserOut] |
 
 Auth: send `Authorization: Bearer <access_token>` from `POST /api/auth/login`.

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client.js";
 import Layout from "../../components/Layout.jsx";
+import { AlertsPanel } from "../../components/ReviewTools.jsx";
 import { Badge, Card, ErrorText, formatDate } from "../../components/ui.jsx";
 
 const FILTERS = ["all", "submitted", "under_scrutiny", "escalated", "returned_for_correction", "scrutiny_complete"];
@@ -37,6 +38,8 @@ export default function Queue({ title, basePath, defaultFilter = "all" }) {
         ))}
       </div>
 
+      <Card title="Alerts" className="mt-4"><AlertsPanel appBasePath={basePath} /></Card>
+
       <div className="mt-4 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button
@@ -52,15 +55,17 @@ export default function Queue({ title, basePath, defaultFilter = "all" }) {
       <Card className="mt-3">
         {!apps && <p className="text-sm text-slate-500">Loading...</p>}
         {apps?.length === 0 && <p className="text-sm text-slate-500">Nothing in this view.</p>}
+        {apps?.length > 0 && <p className="mb-2 text-xs text-slate-500">Sorted by review priority: a weighted count of open issues (breakdown on each case). Not a probability.</p>}
         {apps?.length > 0 && (
           <table className="w-full text-sm">
             <thead className="text-left text-slate-500">
-              <tr><th className="py-1">Institution</th><th>Category</th><th>Status</th><th>Open findings</th><th>Critical</th><th>Submitted</th><th /></tr>
+              <tr><th className="py-1" title="Review-priority aid, not a probability">Priority</th><th>Institution</th><th>Category</th><th>Status</th><th>Open findings</th><th>Critical</th><th>Submitted</th><th /></tr>
             </thead>
             <tbody>
               {apps.map((a) => (
                 <tr key={a.id} className="border-t border-slate-100">
-                  <td className="py-2">{a.institution_name}</td>
+                  <td className="py-2 font-medium">{a.priority_score ?? "-"}</td>
+                  <td>{a.institution_name}</td>
                   <td>{a.category.replaceAll("_", " ")}</td>
                   <td><Badge value={a.status} /></td>
                   <td>{a.open_findings}</td>

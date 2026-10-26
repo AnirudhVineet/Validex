@@ -64,7 +64,7 @@ export default function AdminHome() {
             ))}
           </tbody>
         </table>
-        <p className="mt-2 text-xs text-slate-500">Rule editing for admin and senior authority arrives in Phase 2.</p>
+        <p className="mt-2 text-xs text-slate-500">Rules are edited on the Rule editor page (admin and senior authority only).</p>
       </Card>
     </Layout>
   );
