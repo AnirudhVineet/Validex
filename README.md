@@ -1,4 +1,4 @@
-# VerifyAI (SIH prototype)
+# Validex (SIH prototype)
 
 AI-assisted application and document pre-validation for AICTE Extension of Approval (EoA) scrutiny.
 It pre-validates, flags, verifies and explains. **Authorised officials make every final decision.**
@@ -12,10 +12,9 @@ API summary: [docs/api-contract.md](docs/api-contract.md).
 ## Ports
 | Service | URL |
 |---|---|
-| Frontend | http://localhost:5180 |
-| Backend API + Swagger | http://localhost:8010/docs |
+| Frontend | http://localhost:5173 |
+| Backend API + Swagger | http://localhost:8000/docs |
 
-We use 5180 / 8010 (not 5173 / 8000) to avoid clashes with other local projects.
 
 ## Option A: Docker (Postgres)
 ```bash
@@ -33,13 +32,13 @@ py -3.12 -m venv .venv
 cd ..
 backend/.venv/Scripts/python seed/seed.py --reset # create tables + SYNTHETIC seed
 cd backend
-.venv/Scripts/python -m uvicorn app.main:app --reload --port 8010
+.venv/Scripts/python -m uvicorn app.main:app --reload --port 8000
 ```
 Frontend (Node 20+), in a second terminal:
 ```bash
 cd frontend
 npm install
-npm run dev        # http://localhost:5180, proxies /api to 127.0.0.1:8010
+npm run dev        # http://localhost:5173, proxies /api to 127.0.0.1:8000
 ```
 OCR (Phase 1) needs Tesseract. It is included in the Docker image; for local dev on Windows install it
 separately and add it to PATH, or run OCR work through Docker.
@@ -47,11 +46,11 @@ separately and add it to PATH, or run OCR work through Docker.
 ## Demo accounts (SYNTHETIC, password `demo1234`)
 | Role | Email |
 |---|---|
-| applicant | applicant@verifyai.demo |
-| scrutiny_officer | officer@verifyai.demo |
-| senior_authority | senior@verifyai.demo |
-| inspector | inspector@verifyai.demo |
-| admin | admin@verifyai.demo |
+| applicant | applicant@validex.demo |
+| scrutiny_officer | officer@validex.demo |
+| senior_authority | senior@validex.demo |
+| inspector | inspector@validex.demo |
+| admin | admin@validex.demo |
 
 ## Tests
 ```bash

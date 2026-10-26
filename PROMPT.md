@@ -1,7 +1,7 @@
-# VerifyAI: master prompt (paste into Claude Code at the repo root)
+# Validex: master prompt (paste into Claude Code at the repo root)
 
 ```
-Read CLAUDE.md first, then docs/PLAN.md. We are a 5-person SIH team building "VerifyAI",
+Read CLAUDE.md first, then docs/PLAN.md. We are a 5-person SIH team building "Validex",
 an AI-assisted document validation prototype for AICTE EoA applications. We have about
 10 days. CLAUDE.md is the source of truth; if it conflicts with the plan, follow CLAUDE.md
 and tell me.

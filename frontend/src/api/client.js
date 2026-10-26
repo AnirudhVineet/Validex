@@ -1,5 +1,5 @@
 // Small fetch wrapper. All calls go to /api (proxied to the backend by Vite).
-const TOKEN_KEY = "verifyai_token";
+const TOKEN_KEY = "validex_token";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);

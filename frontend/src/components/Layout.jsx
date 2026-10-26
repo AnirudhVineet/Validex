@@ -11,7 +11,7 @@ export const ROLE_LABEL = {
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-slate-200 bg-white px-6 py-3 text-xs text-slate-500">
-      VerifyAI is a hackathon prototype, not an official AICTE system. Decision support only:
+      Validex is a hackathon prototype, not an official AICTE system. Decision support only:
       authorised officials make every final decision. All data shown is SYNTHETIC.
     </footer>
   );
@@ -23,7 +23,7 @@ export default function Layout({ children }) {
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
         <div className="font-semibold">
-          VerifyAI <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">PROTOTYPE</span>
+          Validex <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">PROTOTYPE</span>
         </div>
         {user && (
           <div className="flex items-center gap-4 text-sm">

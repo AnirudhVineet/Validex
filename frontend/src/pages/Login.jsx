@@ -32,7 +32,7 @@ export default function Login() {
       <div className="flex flex-1 items-center justify-center px-4">
         <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <div>
-            <h1 className="text-xl font-semibold">VerifyAI</h1>
+            <h1 className="text-xl font-semibold">Validex</h1>
             <p className="text-sm text-slate-500">AI-assisted document pre-validation (prototype)</p>
           </div>
           <label className="block text-sm">

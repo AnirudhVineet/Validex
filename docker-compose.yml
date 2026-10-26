@@ -2,13 +2,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: verifyai
-      POSTGRES_PASSWORD: verifyai   # local demo database only
-      POSTGRES_DB: verifyai
+      POSTGRES_USER: validex
+      POSTGRES_PASSWORD: validex   # local demo database only
+      POSTGRES_DB: validex
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U verifyai"]
+      test: ["CMD-SHELL", "pg_isready -U validex"]
       interval: 3s
       retries: 20
 
@@ -17,13 +17,13 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg2://verifyai:verifyai@db:5432/verifyai
+      DATABASE_URL: postgresql+psycopg2://validex:validex@db:5432/validex
       JWT_SECRET: ${JWT_SECRET:-change-me-for-anything-shared}
       STORAGE_DIR: /data/files
     volumes:
       - files:/data/files
     ports:
-      - "8010:8010"
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -31,9 +31,9 @@ services:
   frontend:
     build: ./frontend
     environment:
-      API_TARGET: http://backend:8010
+      API_TARGET: http://backend:8000
     ports:
-      - "5180:5180"
+      - "5173:5173"
     depends_on:
       - backend
 

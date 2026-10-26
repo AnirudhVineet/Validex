@@ -39,11 +39,11 @@ DEMO_INSTITUTION = {
 }
 
 DEMO_USERS = [
-    ("applicant@verifyai.demo", "Demo Applicant (SYNTHETIC)", Role.applicant),
-    ("officer@verifyai.demo", "Demo Scrutiny Officer", Role.scrutiny_officer),
-    ("senior@verifyai.demo", "Demo Senior Authority", Role.senior_authority),
-    ("inspector@verifyai.demo", "Demo Inspector", Role.inspector),
-    ("admin@verifyai.demo", "Demo Admin", Role.admin),
+    ("applicant@validex.demo", "Demo Applicant (SYNTHETIC)", Role.applicant),
+    ("officer@validex.demo", "Demo Scrutiny Officer", Role.scrutiny_officer),
+    ("senior@validex.demo", "Demo Senior Authority", Role.senior_authority),
+    ("inspector@validex.demo", "Demo Inspector", Role.inspector),
+    ("admin@validex.demo", "Demo Admin", Role.admin),
 ]
 
 

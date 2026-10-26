@@ -1,4 +1,4 @@
-# VerifyAI shared contracts
+# Validex shared contracts
 
 Source of truth for enums, payload shapes and DB tables shared across the team.
 Do not change anything here without telling the team. CLAUDE.md wins on conflict.

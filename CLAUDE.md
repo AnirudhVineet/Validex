@@ -1,7 +1,7 @@
-# CLAUDE.md: VerifyAI (SIH prototype)
+# CLAUDE.md: Validex (SIH prototype)
 
 ## What this is
-VerifyAI is an AI-assisted application and document validation prototype for AICTE
+Validex is an AI-assisted application and document validation prototype for AICTE
 Extension of Approval (EoA) scrutiny. It pre-validates, flags, verifies and explains.
 Authorized officials make every final decision. It is a hackathon prototype, NOT an
 official AICTE system. Do not use official logos or imply government endorsement.
