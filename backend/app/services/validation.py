@@ -16,9 +16,10 @@ from app.services import audit
 from app.services.access import EDITABLE, REVIEWERS, ensure_applicant_owner, forbidden
 from app.services.applications import current_documents
 from app.services.checklist import resolve_checklist
-from app.services.rules.context import DocView, FieldView, InstitutionView, ValidationContext
+from app.services.rules.context import DocView, FieldView, InstitutionView, ValidationContext, VerificationView
 from app.services.rules.evaluator import evaluate
 from app.services.rules.loader import get_checklist, get_rule_set, load_doc_types, version_label
+from app.services.verification import latest_verifications
 
 OFFICIAL_RUN_STATUSES = {ApplicationStatus.submitted, ApplicationStatus.under_scrutiny,
                          ApplicationStatus.escalated}
@@ -36,7 +37,7 @@ def build_context(db: Session, app: Application, today: date) -> tuple[Validatio
         fields = db.execute(select(ExtractedField).where(ExtractedField.document_id == d.id)).scalars()
         docs[d.doc_type] = DocView(
             id=d.id, doc_type=d.doc_type, status=d.status.value, classified_type=d.classified_type,
-            extraction_error=d.extraction_error,
+            extraction_error=d.extraction_error, sha256=d.sha256, analysis=d.analysis or {},
             fields={f.field_name: FieldView(f.field_name, f.value, f.confidence, f.page, f.bbox,
                                             f.source.value, f.needs_confirmation) for f in fields},
         )
@@ -47,6 +48,9 @@ def build_context(db: Session, app: Application, today: date) -> tuple[Validatio
         checklist=resolve_checklist(checklist_cfg, app, inst, labels),
         today=today,
         doc_labels=labels,
+        verifications={doc_id: VerificationView(v.status.value, v.source, v.is_mock, v.reference_submitted,
+                                                v.mismatches or [], v.error)
+                       for doc_id, v in latest_verifications(db, app).items()},
     )
     return ctx, version_label(checklist_row)
 

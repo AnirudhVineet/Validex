@@ -19,13 +19,15 @@ from reportlab.pdfgen import canvas
 
 PAGE_W, PAGE_H = A4
 DOC_TYPES = ["fire_noc", "affidavit", "accreditation_certificate", "land_document", "faculty_list"]
-VARIANTS = ["valid", "expired", "near_expiry", "missing_field", "name_mismatch", "bad_format", "scanned"]
+VARIANTS = ["valid", "expired", "near_expiry", "missing_field", "name_mismatch", "bad_format", "scanned",
+            "altered", "signed"]
 
 # Which variants make sense for which doc types.
 APPLICABLE = {
     "expired": {"fire_noc", "accreditation_certificate"},
     "near_expiry": {"fire_noc", "accreditation_certificate"},
     "bad_format": {"fire_noc", "accreditation_certificate", "land_document", "affidavit"},
+    "altered": {"fire_noc", "accreditation_certificate"},
 }
 
 # Field each doc type loses in the missing_field variant.
@@ -46,6 +48,10 @@ EXPECTED_RULES = {
     "name_mismatch": ["CONS-001"],
     "bad_format": ["FMT-001"],
     "scanned": [],
+    # Printed expiry extended after issue: the MOCK issuer still holds the real date, and the file
+    # carries an incremental update by an editing tool.
+    "altered": ["VER-001", "ANO-003"],
+    "signed": [],  # SIG-001 is info severity ("signature present, not validated")
 }
 
 MISMATCH_NAME = "SYNTHETIC Riverside College of Arts, Elsewhere Town"
@@ -73,6 +79,7 @@ class GeneratedDoc:
     qr_ref: str | None = None
     issuer: str | None = None
     lines: list[tuple[str, str]] = field(default_factory=list)
+    issuer_overrides: dict = field(default_factory=dict)   # values the MOCK issuer holds instead
 
 
 def fmt(d: date) -> str:
@@ -163,6 +170,79 @@ def make_scanned(pdf: bytes, rng: random.Random) -> bytes:
     return out.getvalue()
 
 
+def append_incremental_update(pdf: bytes, producer: str, days_after: int = 40) -> bytes:
+    """Append a PDF incremental update that replaces the Info dictionary (simulates an edit)."""
+    import re
+
+    import pikepdf
+
+    with pikepdf.open(io.BytesIO(pdf)) as doc:
+        root = doc.trailer.Root.objgen
+        size = int(doc.trailer.Size)
+    prev = int(re.findall(rb"startxref\s+(\d+)", pdf)[-1])
+    stamp = date.today().strftime("%Y%m%d")
+    created = (date.today() - timedelta(days=days_after)).strftime("%Y%m%d")
+    obj_num = size
+    nl = "\n"
+    body = (f"{obj_num} 0 obj{nl}<< /Producer ({producer}) /CreationDate (D:{created}100000) "
+            f"/ModDate (D:{stamp}100000) >>{nl}endobj{nl}").encode()
+    head = pdf if pdf.endswith(b"\n") else pdf + b"\n"
+    obj_offset = len(head)
+    xref_offset = obj_offset + len(body)
+    xref = (f"xref{nl}0 1{nl}0000000000 65535 f {nl}{obj_num} 1{nl}{obj_offset:010d} 00000 n {nl}"
+            f"trailer{nl}<< /Size {obj_num + 1} /Root {root[0]} {root[1]} R /Info {obj_num} 0 R /Prev {prev} >>{nl}"
+            f"startxref{nl}{xref_offset}{nl}%%EOF{nl}").encode()
+    return head + body + xref
+
+
+def add_signature_field(pdf: bytes) -> bytes:
+    """Add an (unsigned, placeholder) digital signature field so 'signature present' can be shown."""
+    import pikepdf
+
+    with pikepdf.open(io.BytesIO(pdf)) as doc:
+        sig = doc.make_indirect(pikepdf.Dictionary(
+            Type=pikepdf.Name.Sig, Filter=pikepdf.Name("/Adobe.PPKLite"),
+            SubFilter=pikepdf.Name("/adbe.pkcs7.detached"),
+            ByteRange=pikepdf.Array([0, 0, 0, 0]), Contents=pikepdf.String(bytes(8)),
+            Name=pikepdf.String("SYNTHETIC signer (placeholder)")))
+        widget = doc.make_indirect(pikepdf.Dictionary(
+            Type=pikepdf.Name.Annot, Subtype=pikepdf.Name.Widget, FT=pikepdf.Name.Sig,
+            T=pikepdf.String("Signature1"), V=sig, Rect=pikepdf.Array([0, 0, 0, 0]), F=132,
+            P=doc.pages[0].obj))
+        doc.pages[0].obj.Annots = doc.make_indirect(pikepdf.Array([widget]))
+        doc.Root.AcroForm = doc.make_indirect(pikepdf.Dictionary(Fields=pikepdf.Array([widget]), SigFlags=3))
+        out = io.BytesIO()
+        doc.save(out)
+        return out.getvalue()
+
+
+def to_jpeg(pdf: bytes, quality: int = 80) -> bytes:
+    """Render page 1 to a JPEG (for image-upload and ELA tests)."""
+    import pypdfium2 as pdfium
+
+    doc = pdfium.PdfDocument(pdf)
+    try:
+        img = doc[0].render(scale=150 / 72).to_pil().convert("RGB")
+    finally:
+        doc.close()
+    out = io.BytesIO()
+    img.save(out, format="JPEG", quality=quality)
+    return out.getvalue()
+
+
+def edit_jpeg(jpeg: bytes, box: tuple[int, int, int, int], text: str) -> bytes:
+    """Paste a freshly drawn patch onto a JPEG and save at high quality (simulated local edit)."""
+    from PIL import Image, ImageDraw
+
+    img = Image.open(io.BytesIO(jpeg)).convert("RGB")
+    patch = Image.new("RGB", (box[2] - box[0], box[3] - box[1]), (255, 255, 255))
+    ImageDraw.Draw(patch).text((4, 4), text, fill=(0, 0, 0))
+    img.paste(patch, box[:2])
+    out = io.BytesIO()
+    img.save(out, format="JPEG", quality=97)
+    return out.getvalue()
+
+
 def _cert_number(doc_type: str, rng: random.Random, today: date, bad: bool) -> str:
     n6 = f"{rng.randrange(10**6):06d}"
     if doc_type == "fire_noc":
@@ -192,6 +272,9 @@ def make_document(doc_type: str, variant: str, inst: InstitutionData, today: dat
     elif variant == "near_expiry":
         expiry = today + timedelta(days=rng.randint(20, 70))
         issue = expiry - timedelta(days=3 * 365)
+    real_expiry = expiry
+    if variant == "altered":
+        expiry = expiry + timedelta(days=2 * 365)  # printed date pushed out; issuer keeps real_expiry
 
     truth: dict = {"institution_name": name}
     lines: list[tuple[str, str]] = []
@@ -271,7 +354,14 @@ def make_document(doc_type: str, variant: str, inst: InstitutionData, today: dat
             qr = None
 
     pdf = _render(title, subtitle, lines, body, table, qr)
+    overrides = {}
     if variant == "scanned":
         pdf = make_scanned(pdf, rng)
+    elif variant == "altered":
+        pdf = append_incremental_update(pdf, producer="Generic PDF Editor 2.1")
+        overrides = {"expiry_date": real_expiry.isoformat()}
+    elif variant == "signed":
+        pdf = add_signature_field(pdf)
     return GeneratedDoc(doc_type, variant, pdf, truth, list(EXPECTED_RULES[variant]),
-                        qr_ref=(qr or {}).get("ref"), issuer=issuer if qr else None, lines=lines)
+                        qr_ref=(qr or {}).get("ref"), issuer=issuer if qr else None, lines=lines,
+                        issuer_overrides=overrides)

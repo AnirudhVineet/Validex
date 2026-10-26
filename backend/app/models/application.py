@@ -56,6 +56,8 @@ class ApplicationDocument(Base):
     classified_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     extraction_method: Mapped[str | None] = mapped_column(String(20), nullable=True)
     extraction_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Upload-time signals: QR codes, page hashes, PDF metadata, signature presence, ELA (JPEG only).
+    analysis: Mapped[dict] = mapped_column(JSON, default=dict)
     uploaded_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
     uploaded_at: Mapped[datetime] = mapped_column(default=utcnow)
 

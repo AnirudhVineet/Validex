@@ -14,6 +14,7 @@ from app.services import applications as svc
 from app.services.access import STAFF, can_view, ensure_view
 from app.services.report import checklist_status
 from app.services.validation import latest_run, run_validation
+from app.services.verification import verify_application
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
 
@@ -94,8 +95,9 @@ def versions(application_id: str, db: Session = Depends(get_db),
 @router.post("/{application_id}/submit", response_model=ApplicationOut)
 def submit(application_id: str, db: Session = Depends(get_db),
            user: User = Depends(get_current_user)) -> Application:
-    """Submit or resubmit. The official validation run happens immediately on submission."""
+    """Submit or resubmit. MOCK issuer verification and the official validation run happen immediately."""
     app = svc.submit(db, user, load_application(db, application_id))
+    verify_application(db, app, user.id)
     run_validation(db, user, app, precheck=False, skip_permission=True)
     db.commit()
     return app

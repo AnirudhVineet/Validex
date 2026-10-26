@@ -1,4 +1,5 @@
 """Shared fixtures: a fresh in-memory SQLite DB per test, one user per role, temp file storage."""
+import json
 import random
 import sys
 from datetime import date
@@ -36,6 +37,22 @@ INSTITUTION = {
 @pytest.fixture(autouse=True)
 def temp_storage(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_dir", tmp_path / "files")
+    issuer = tmp_path / "mock_issuer_data.json"
+    issuer.write_text(json.dumps({"is_mock": True, "records": {}}))
+    monkeypatch.setattr(settings, "mock_issuer_data_path", issuer)
+
+
+def register_issuer_record(gen: docgen.GeneratedDoc, **changes) -> None:
+    """Put what the MOCK issuer 'issued' for a generated document into the test issuer file."""
+    if not gen.qr_ref:
+        return
+    path = Path(settings.mock_issuer_data_path)
+    data = json.loads(path.read_text())
+    record = {"issuer": gen.issuer, "is_mock": True, "institution_name": INSTITUTION["name"],
+              **{k: v for k, v in gen.truth.items() if k in ("certificate_number", "issue_date", "expiry_date")},
+              **gen.issuer_overrides, **changes}
+    data["records"][gen.qr_ref] = record
+    path.write_text(json.dumps(data))
 
 
 @pytest.fixture()
@@ -45,7 +62,9 @@ def make_pdf():
     def _make(doc_type: str, variant: str = "valid", seed: int = 1, **kwargs) -> docgen.GeneratedDoc:
         inst = docgen.InstitutionData(INSTITUTION["name"], INSTITUTION["address"], INSTITUTION["aicte_ref"],
                                       INSTITUTION["state"], INSTITUTION["faculty_count"])
-        return docgen.make_document(doc_type, variant, inst, date.today(), random.Random(seed), **kwargs)
+        gen = docgen.make_document(doc_type, variant, inst, date.today(), random.Random(seed), **kwargs)
+        register_issuer_record(gen)
+        return gen
 
     return _make
 

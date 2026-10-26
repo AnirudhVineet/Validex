@@ -305,6 +305,184 @@ def low_confidence_fields(ctx: ValidationContext, _: NoParams) -> CheckResult:
     return result
 
 
+# ---------- issuer verification (MOCK sources) ----------
+
+class StatusesParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    statuses: list[str] = Field(min_length=1)
+
+
+class MaxDistanceParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    max_distance: int = Field(ge=0, le=64)
+
+
+_VERIFICATION_TEXT = {
+    "mismatch": ("{label}: issuer record differs from the document",
+                 "The {source} holds different values for: {fields}."),
+    "expired": ("{label}: issuer reports the document as expired",
+                "The {source} lists an expiry date before today."),
+    "source_unavailable": ("{label}: issuer could not be reached, manual review needed",
+                           "{error}. No verification result was assumed."),
+    "manual_review": ("{label}: could not be verified automatically, manual review needed",
+                      "{error}."),
+    "pending": ("{label}: issuer verification pending",
+                "The {source} reports the record as still being processed."),
+}
+
+
+def issuer_verification(ctx: ValidationContext, params: StatusesParams) -> CheckResult:
+    result = CheckResult()
+    for doc in ctx.documents.values():
+        ver = ctx.verifications.get(doc.id)
+        if ver is None or ver.status not in params.statuses:
+            continue
+        title, explanation = _VERIFICATION_TEXT.get(ver.status, ("{label}: verification {status}", "{error}"))
+        fields = ", ".join(m["field"].replace("_", " ") for m in ver.mismatches) or "-"
+        fmt = {"label": ctx.label(doc.doc_type), "source": ver.source, "fields": fields,
+               "error": ver.error or "No further detail", "status": ver.status}
+        first = ver.mismatches[0] if ver.mismatches else None
+        evidence = doc.fields[first["field"]].evidence() if first and first["field"] in doc.fields else None
+        result.findings.append(FindingDraft(
+            title=title.format(**fmt),
+            explanation=explanation.format(**fmt) + (" (MOCK source)" if ver.is_mock else ""),
+            document_id=doc.id,
+            found_value=first["submitted"] if first else (ver.reference or None),
+            expected_value=first["source"] if first else f"verified by {ver.source}",
+            evidence=evidence,
+        ))
+    return result
+
+
+# ---------- anomaly indicators (preliminary, staff only) ----------
+
+_MAY_BE_LEGIT = " This is a preliminary indicator that requires manual review; it may have a legitimate explanation."
+
+
+def exact_duplicate_files(ctx: ValidationContext, _: NoParams) -> CheckResult:
+    result = CheckResult()
+    seen: dict[str, DocView] = {}
+    for doc in sorted(ctx.documents.values(), key=lambda d: d.doc_type):
+        if not doc.sha256:
+            continue
+        first = seen.get(doc.sha256)
+        if first is None:
+            seen[doc.sha256] = doc
+            continue
+        result.findings.append(FindingDraft(
+            title=f"Preliminary indicator: identical file in '{ctx.label(first.doc_type)}' and '{ctx.label(doc.doc_type)}'",
+            explanation="Both slots contain byte-for-byte the same file (same SHA-256)." + _MAY_BE_LEGIT,
+            document_id=doc.id, found_value=f"SHA-256 {doc.sha256[:16]}...",
+            expected_value="a different file per checklist slot",
+        ))
+    return result
+
+
+def near_duplicate_pages(ctx: ValidationContext, params: MaxDistanceParams) -> CheckResult:
+    from app.services.analysis.imaging import hash_distance
+
+    result = CheckResult()
+    docs = sorted(ctx.documents.values(), key=lambda d: d.doc_type)
+    for i, a in enumerate(docs):
+        for b in docs[i + 1:]:
+            ha, hb = a.analysis.get("page_hashes") or [], b.analysis.get("page_hashes") or []
+            if not ha or not hb or a.sha256 == b.sha256:
+                continue
+            dist = hash_distance(ha[0], hb[0])
+            if dist <= params.max_distance:
+                result.findings.append(FindingDraft(
+                    title=f"Preliminary indicator: '{ctx.label(a.doc_type)}' and '{ctx.label(b.doc_type)}' look nearly identical",
+                    explanation=f"Perceptual hashes of page 1 differ by {dist} of 256 bits (threshold {params.max_distance})."
+                                + _MAY_BE_LEGIT,
+                    document_id=b.id, found_value=f"distance {dist}", expected_value=f"> {params.max_distance}",
+                ))
+    return result
+
+
+def pdf_revision_indicators(ctx: ValidationContext, _: NoParams) -> CheckResult:
+    result = CheckResult()
+    for doc in ctx.documents.values():
+        pdf = doc.analysis.get("pdf") or {}
+        reasons = []
+        if pdf.get("incremental_updates"):
+            reasons.append(f"{pdf['incremental_updates']} incremental update(s) after the original save")
+        if pdf.get("editing_tool"):
+            reasons.append(f"producer/creator names an editing tool ('{pdf.get('producer') or pdf.get('creator')}')")
+        if not reasons:
+            continue
+        result.findings.append(FindingDraft(
+            title=f"Preliminary indicator: {ctx.label(doc.doc_type)} file was modified after creation",
+            explanation="PDF structure shows " + "; ".join(reasons) + ". Form filling and signing also do this."
+                        + _MAY_BE_LEGIT,
+            document_id=doc.id, found_value="; ".join(reasons), expected_value="single save by the issuer",
+            evidence={"page": None, "bbox": None,
+                      "snippet": f"created {pdf.get('creation_date')}, modified {pdf.get('mod_date')}"},
+        ))
+    return result
+
+
+def qr_reference_mismatch(ctx: ValidationContext, _: NoParams) -> CheckResult:
+    result = CheckResult()
+    for doc in _extracted_docs(ctx, result):
+        printed, qr = doc.value("certificate_number"), doc.qr_ref
+        if printed and qr and printed.replace(" ", "").upper() != qr.replace(" ", "").upper():
+            result.findings.append(FindingDraft(
+                title=f"Preliminary indicator: {ctx.label(doc.doc_type)} QR reference differs from printed number",
+                explanation=f"The QR code encodes '{qr}' but the printed certificate number is '{printed}'." + _MAY_BE_LEGIT,
+                document_id=doc.id, found_value=printed, expected_value=qr,
+                evidence=doc.fields["certificate_number"].evidence(),
+            ))
+    return result
+
+
+def irregular_dates(ctx: ValidationContext, _: NoParams) -> CheckResult:
+    result = CheckResult()
+    for doc in _extracted_docs(ctx, result):
+        pdf = doc.analysis.get("pdf") or {}
+        created, modified = pdf.get("creation_date"), pdf.get("mod_date")
+        issue = _parse_iso(doc.value("issue_date"))
+        notes = []
+        if created and issue and date.fromisoformat(created[:10]) < issue - timedelta(days=1):
+            notes.append(f"file created {created[:10]}, before the printed issue date {issue.isoformat()}")
+        if created and modified and modified < created:
+            notes.append(f"modification date {modified[:10]} is before creation date {created[:10]}")
+        if notes:
+            result.findings.append(FindingDraft(
+                title=f"Preliminary indicator: irregular dates in {ctx.label(doc.doc_type)}",
+                explanation="; ".join(notes).capitalize() + "." + _MAY_BE_LEGIT,
+                document_id=doc.id, found_value="; ".join(notes), expected_value="file dates consistent with issue date",
+            ))
+    return result
+
+
+def ela_indicator(ctx: ValidationContext, _: NoParams) -> CheckResult:
+    result = CheckResult()
+    for doc in ctx.documents.values():
+        ela = doc.analysis.get("ela") or {}
+        if ela.get("flag"):
+            result.findings.append(FindingDraft(
+                title=f"Preliminary indicator: uneven JPEG compression in {ctx.label(doc.doc_type)}",
+                explanation=f"Error level analysis found a region {ela['ratio']}x above the page baseline. "
+                            "ELA is unreliable on text documents." + _MAY_BE_LEGIT,
+                document_id=doc.id, found_value=f"ratio {ela['ratio']}", expected_value="uniform error level",
+                evidence={"page": 1, "bbox": ela.get("hotspot_bbox"), "snippet": None},
+            ))
+    return result
+
+
+def signature_presence(ctx: ValidationContext, _: NoParams) -> CheckResult:
+    result = CheckResult()
+    for doc in ctx.documents.values():
+        if (doc.analysis.get("pdf") or {}).get("signature_present"):
+            result.findings.append(FindingDraft(
+                title=f"{ctx.label(doc.doc_type)}: digital signature present, not validated",
+                explanation="The PDF contains a signature field. Validex detects its presence only; "
+                            "the signature and certificate chain are NOT validated.",
+                document_id=doc.id, found_value="signature present", expected_value="validate manually if relied on",
+            ))
+    return result
+
+
 # name -> (function, params model)
 CHECKS: dict[str, tuple[Callable[..., CheckResult], type[BaseModel]]] = {
     "required_document_present": (required_document_present, NoParams),
@@ -320,4 +498,12 @@ CHECKS: dict[str, tuple[Callable[..., CheckResult], type[BaseModel]]] = {
     "ter_payment_paid": (ter_payment_paid, NoParams),
     "no_open_deficiency": (no_open_deficiency, NoParams),
     "low_confidence_fields": (low_confidence_fields, NoParams),
+    "issuer_verification": (issuer_verification, StatusesParams),
+    "exact_duplicate_files": (exact_duplicate_files, NoParams),
+    "near_duplicate_pages": (near_duplicate_pages, MaxDistanceParams),
+    "pdf_revision_indicators": (pdf_revision_indicators, NoParams),
+    "qr_reference_mismatch": (qr_reference_mismatch, NoParams),
+    "irregular_dates": (irregular_dates, NoParams),
+    "ela_indicator": (ela_indicator, NoParams),
+    "signature_presence": (signature_presence, NoParams),
 }

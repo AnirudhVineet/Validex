@@ -25,6 +25,13 @@ class DocView:
     classified_type: str | None
     extraction_error: str | None
     fields: dict[str, FieldView] = field(default_factory=dict)
+    sha256: str = ""
+    analysis: dict = field(default_factory=dict)
+
+    @property
+    def qr_ref(self) -> str | None:
+        refs = [q.get("ref") for q in self.analysis.get("qr", []) if q.get("ref")]
+        return refs[0] if refs else None
 
     @property
     def extracted(self) -> bool:
@@ -58,12 +65,25 @@ class ChecklistEntry:
 
 
 @dataclass
+class VerificationView:
+    """Latest issuer verification for one document (see services/verification)."""
+
+    status: str
+    source: str
+    is_mock: bool
+    reference: str
+    mismatches: list[dict]
+    error: str | None
+
+
+@dataclass
 class ValidationContext:
     institution: InstitutionView
     documents: dict[str, DocView]          # current document per doc_type
     checklist: list[ChecklistEntry]
     today: date
     doc_labels: dict[str, str] = field(default_factory=dict)
+    verifications: dict[str, VerificationView] = field(default_factory=dict)  # by document id
 
     def label(self, doc_type: str) -> str:
         return self.doc_labels.get(doc_type, doc_type.replace("_", " "))

@@ -11,6 +11,7 @@ from app.enums import ExtractionSource, Role
 from app.models import Application, ApplicationDocument, ExtractedField, User
 from app.models.base import new_id, utcnow
 from app.services import audit, storage
+from app.services.analysis import analyze_file
 from app.services.access import ensure_applicant_owner, ensure_editable, ensure_view, forbidden
 from app.services.extraction import extract_document
 from app.services.rules.loader import load_doc_types
@@ -51,7 +52,21 @@ def upload_document(db: Session, user: User, app: Application, doc_type: str,
               {"application_id": app.id, "doc_type": doc_type, "sha256": doc.sha256,
                "size_bytes": doc.size_bytes, "mime_type": mime})
     extract_document(db, doc, user.id)
+    analyze_document(db, doc, user.id)
     return doc
+
+
+def analyze_document(db: Session, doc: ApplicationDocument, actor: str) -> None:
+    """Upload-time signals (QR, page hashes, PDF metadata, signature, ELA). Audited as a summary."""
+    doc.analysis = analyze_file(storage.full_path(doc.storage_path), doc.mime_type)
+    pdf = doc.analysis.get("pdf") or {}
+    audit.log(db, actor, "document.analyzed", "document", doc.id, {
+        "qr_codes": len(doc.analysis.get("qr", [])),
+        "incremental_updates": pdf.get("incremental_updates"),
+        "signature_present": pdf.get("signature_present"),
+        "ela_flag": (doc.analysis.get("ela") or {}).get("flag"),
+        "errors": doc.analysis.get("errors", []),
+    })
 
 
 def get_fields(db: Session, doc: ApplicationDocument) -> list[ExtractedField]:

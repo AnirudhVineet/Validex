@@ -4,7 +4,7 @@
 illustrative: true
 notice: "Illustrative rules for the prototype. Not official AICTE criteria."
 name: core
-version: 1
+version: 2
 rules:
   - id: COMP-001
     description: Every required checklist document is uploaded.
@@ -135,5 +135,106 @@ rules:
     severity: info
     condition: {check: low_confidence_fields}
     recommended_action: Officer to confirm or correct the extracted value against the document.
+    version: 1
+    visible_to_applicant: false
+
+  # ---- Issuer verification (all sources are MOCK in this prototype) ----
+  - id: VER-001
+    description: Values on the document match the issuer's record.
+    category: verification
+    severity: high
+    condition: {check: issuer_verification, params: {statuses: [mismatch]}}
+    recommended_action: Compare the submitted and source values; ask the institution to explain or correct.
+    version: 1
+    visible_to_applicant: false
+
+  - id: VER-002
+    description: The issuer does not report the document as expired.
+    category: verification
+    severity: high
+    condition: {check: issuer_verification, params: {statuses: [expired]}}
+    recommended_action: Request a renewed document from the institution.
+    version: 1
+    visible_to_applicant: false
+
+  - id: VER-003
+    description: The document could be checked with its issuer.
+    category: verification
+    severity: medium
+    condition: {check: issuer_verification, params: {statuses: [source_unavailable, manual_review]}}
+    recommended_action: Verify manually with the issuing authority, or re-run verification later.
+    version: 1
+    visible_to_applicant: false
+
+  - id: VER-004
+    description: Issuer verification is complete (not pending).
+    category: verification
+    severity: low
+    condition: {check: issuer_verification, params: {statuses: [pending]}}
+    recommended_action: Re-run verification later; follow up if it stays pending.
+    version: 1
+    visible_to_applicant: false
+
+  - id: SIG-001
+    description: Digital signature presence is reported (presence only, not validated).
+    category: verification
+    severity: info
+    condition: {check: signature_presence}
+    recommended_action: If the signature matters, validate it with a proper signature validator.
+    version: 1
+    visible_to_applicant: false
+
+  # ---- Anomaly indicators: preliminary, staff only, require manual review ----
+  - id: ANO-001
+    description: The same file is not uploaded in more than one checklist slot.
+    category: anomaly
+    severity: medium
+    condition: {check: exact_duplicate_files}
+    recommended_action: Check whether the right files were uploaded; ask the institution if unclear.
+    version: 1
+    visible_to_applicant: false
+
+  - id: ANO-002
+    description: Different checklist slots do not contain near-identical pages.
+    category: anomaly
+    severity: low
+    condition: {check: near_duplicate_pages, params: {max_distance: 18}}
+    recommended_action: Open both files and compare them side by side.
+    version: 1
+    visible_to_applicant: false
+
+  - id: ANO-003
+    description: PDF structure shows no later modification or editing-tool producer.
+    category: anomaly
+    severity: medium
+    condition: {check: pdf_revision_indicators}
+    recommended_action: Compare with the issuer's copy; ask for the original file if needed.
+    version: 1
+    visible_to_applicant: false
+
+  - id: ANO-004
+    description: The QR reference matches the printed certificate number.
+    category: anomaly
+    severity: medium
+    condition: {check: qr_reference_mismatch}
+    recommended_action: Verify the certificate number with the issuer.
+    version: 1
+    visible_to_applicant: false
+
+  - id: ANO-005
+    description: File dates are consistent with the printed issue date.
+    category: anomaly
+    severity: low
+    condition: {check: irregular_dates}
+    recommended_action: Review the document history; may be explained by re-saving or scanning.
+    version: 1
+    visible_to_applicant: false
+
+  - id: ANO-006
+    description: JPEG uploads show uniform error levels (ELA; weak signal on text documents).
+    category: anomaly
+    severity: low
+    condition: {check: ela_indicator}
+    recommended_action: Inspect the highlighted region in the original image.
     version: 1
     visible_to_applicant: false

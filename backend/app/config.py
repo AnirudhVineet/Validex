@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 10 * 1024 * 1024
     storage_dir: Path = DATA_DIR / "files"
     cors_origins: list[str] = ["http://localhost:5173"]
+    # MOCK issuer records, generated with the synthetic documents by seed/generate_docs.py.
+    mock_issuer_data_path: Path = BACKEND_DIR.parent / "seed" / "output" / "mock_issuer_data.json"
+    pending_verification_alert_hours: int = 24
 
 
 settings = Settings()
