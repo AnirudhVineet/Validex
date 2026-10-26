@@ -27,12 +27,12 @@ def _inst_data(inst: dict) -> InstitutionData:
     return InstitutionData(inst["name"], inst["address"], inst["aicte_ref"], inst["state"], inst["faculty_count"])
 
 
-def _write(path: Path, gen, inst: dict, manifest: list, issuer_records: dict, scenario: str | None,
+def _write(path: Path, gen, inst: dict, manifest: list, issuer_records: dict, scenario: str | None, out_dir: Path,
            issuer_sim: dict | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(gen.pdf)
     manifest.append({
-        "file": path.relative_to(OUTPUT_DIR).as_posix(), "scenario": scenario,
+        "file": path.relative_to(out_dir).as_posix(), "scenario": scenario,
         "institution_ref": inst["aicte_ref"], "doc_type": gen.doc_type, "variant": gen.variant,
         "truth": gen.truth, "expected_rule_ids": gen.expected_rule_ids, "qr_ref": gen.qr_ref,
     })
@@ -75,7 +75,7 @@ def generate_all(today: date | None = None, out_dir: Path = OUTPUT_DIR) -> dict:
             if doc_type == "faculty_list":
                 faculty_by_scenario[sc["key"]] = gen.truth["faculty_ids"].split(",")
             path = out_dir / "applications" / sc["key"] / f"{doc_type}__{variant}.pdf"
-            _write(path, gen, inst, documents, issuer_records, sc["key"], sc.get("issuer_sim", {}).get(doc_type))
+            _write(path, gen, inst, documents, issuer_records, sc["key"], out_dir, sc.get("issuer_sim", {}).get(doc_type))
             files.append({"doc_type": doc_type, "file": path.relative_to(out_dir).as_posix()})
         files_by_scenario[sc["key"]] = {f["doc_type"]: f["file"] for f in files}
         if sc.get("duplicate"):  # the same file uploaded into a second slot
@@ -94,7 +94,7 @@ def generate_all(today: date | None = None, out_dir: Path = OUTPUT_DIR) -> dict:
     demo = institutions[0]
     for doc_type, variant in DEMO_UPLOADS:
         gen = make_document(doc_type, variant, _inst_data(demo), today, rng)
-        _write(out_dir / "demo_upload" / f"{doc_type}__{variant}.pdf", gen, demo, documents, issuer_records, None)
+        _write(out_dir / "demo_upload" / f"{doc_type}__{variant}.pdf", gen, demo, documents, issuer_records, None, out_dir)
 
     manifest = {
         "synthetic": True,

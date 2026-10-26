@@ -85,3 +85,10 @@ def test_normalize_date_formats():
     assert normalize_date("31 / 03 / 2025") == "2025-03-31"
     assert normalize_date("31 March 2025") == "2025-03-31"
     assert normalize_date("31-13-2025") is None
+
+
+def test_certificate_number_strips_ocr_specks():
+    from app.services.extraction.parse import _normalize_value
+
+    assert _normalize_value("certificate_number", "FNOC-2026-140891.")[0] == "FNOC-2026-140891"
+    assert _normalize_value("certificate_number", "-fnoc-2026-1 40891")[0] == "FNOC-2026-140891"

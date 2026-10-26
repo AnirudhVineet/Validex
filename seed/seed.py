@@ -115,7 +115,24 @@ def _drive_to_target(db, app: Application, spec: dict, applicant: User, officer:
         app_svc.decide(db, officer, app, decision, reason, run.id)
 
 
-def seed_institutions_and_applications() -> list[dict]:
+def seed_one_application(db, n: int, spec: dict, by_ref: dict, officer: User, password_hash: str,
+                         output_dir: Path = OUTPUT_DIR) -> Application:
+    """Create one scenario application through the real services (upload, extract, verify, validate)."""
+    spec.setdefault("age_days", (n * 7) % 45)
+    inst = by_ref[spec["institution_ref"]]
+    applicant = _get_or_create_user(db, f"applicant{n}@validex.demo", f"Applicant {n} (SYNTHETIC)",
+                                    Role.applicant, inst.id, password_hash)
+    app = app_svc.create_application(db, applicant, ApplicationCategory(spec["category"]),
+                                     "2027-28", spec["form_data"])
+    for doc in spec["documents"]:
+        data = (output_dir / doc["file"]).read_bytes()
+        upload_document(db, applicant, app, doc["doc_type"], Path(doc["file"]).name, data)
+    _drive_to_target(db, app, spec, applicant, officer)
+    db.commit()
+    return app
+
+
+def seed_institutions_and_applications(output_dir: Path = OUTPUT_DIR) -> list[dict]:
     """All synthetic institutions plus scenario applications (only if no applications exist yet)."""
     db = SessionLocal()
     results = []
@@ -125,24 +142,15 @@ def seed_institutions_and_applications() -> list[dict]:
             db.commit()
             return results
 
-        manifest_path = OUTPUT_DIR / "manifest.json"
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else generate_all()
+        manifest_path = output_dir / "manifest.json"
+        manifest = (json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists()
+                    else generate_all(out_dir=output_dir))
         by_ref = {i.aicte_ref: i for i in institutions}
         officer = db.execute(select(User).where(User.email == "officer@validex.demo")).scalar_one()
         pw = hash_password(DEMO_PASSWORD)
 
         for n, spec in enumerate(manifest["applications"], start=1):
-            spec.setdefault("age_days", (n * 7) % 45)
-            inst = by_ref[spec["institution_ref"]]
-            applicant = _get_or_create_user(db, f"applicant{n}@validex.demo", f"Applicant {n} (SYNTHETIC)",
-                                            Role.applicant, inst.id, pw)
-            app = app_svc.create_application(db, applicant, ApplicationCategory(spec["category"]),
-                                             "2027-28", spec["form_data"])
-            for doc in spec["documents"]:
-                data = (OUTPUT_DIR / doc["file"]).read_bytes()
-                upload_document(db, applicant, app, doc["doc_type"], Path(doc["file"]).name, data)
-            _drive_to_target(db, app, spec, applicant, officer)
-            db.commit()
+            app = seed_one_application(db, n, spec, by_ref, officer, pw, output_dir)
             results.append({"scenario": spec["scenario"], "app": app, "expected": spec["expected_rule_ids"],
                             "needs_ocr": spec.get("needs_ocr", False)})
         alerts.pending_verifications(db)

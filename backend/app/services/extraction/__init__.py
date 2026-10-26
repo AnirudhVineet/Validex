@@ -23,10 +23,9 @@ class ExtractionFailed(Exception):
     pass
 
 
-def _read_words(doc: ApplicationDocument):
+def _read_words(path, mime_type: str):
     """Return (words, method) where method is 'pdf_text' or 'ocr'."""
-    path = storage.full_path(doc.storage_path)
-    if doc.mime_type == "application/pdf":
+    if mime_type == "application/pdf":
         words, _ = pdf_text_words(path)
         if len(words) >= MIN_TEXT_WORDS:
             return words, "pdf_text"
@@ -40,17 +39,23 @@ def _read_words(doc: ApplicationDocument):
     return ocr_image_words(path), "ocr"
 
 
+def extract_file(path, mime_type: str, doc_type: str) -> tuple[str, str | None, dict]:
+    """Extract one file without touching the database: (method, classified_type, {field: ParsedField}).
+    Raises ExtractionFailed when OCR is needed but unavailable. Used by the upload path and the evaluation."""
+    doc_types = load_doc_types()
+    words, method = _read_words(path, mime_type)
+    lines = group_lines(words)
+    parsed = extract_fields(lines, doc_types.get(doc_type, {}), from_ocr=(method == "ocr"))
+    return method, classify(lines, doc_types), parsed
+
+
 def extract_document(db: Session, doc: ApplicationDocument, actor: str) -> ApplicationDocument:
     """Extract fields for one document, replacing earlier extracted fields. Caller commits."""
-    doc_types = load_doc_types()
     doc.status = DocumentStatus.processing
     db.execute(delete(ExtractedField).where(ExtractedField.document_id == doc.id))
     try:
-        words, method = _read_words(doc)
-        lines = group_lines(words)
-        doc.classified_type = classify(lines, doc_types)
-        cfg = doc_types.get(doc.doc_type, {})
-        parsed = extract_fields(lines, cfg, from_ocr=(method == "ocr"))
+        method, doc.classified_type, parsed = extract_file(storage.full_path(doc.storage_path),
+                                                           doc.mime_type, doc.doc_type)
     except ExtractionFailed as exc:
         doc.status, doc.extraction_error = DocumentStatus.failed, str(exc)
     except Exception as exc:  # noqa: BLE001 - a broken file must not crash the upload

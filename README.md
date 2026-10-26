@@ -9,6 +9,50 @@ It pre-validates, flags, verifies and explains. **Authorised officials make ever
 Project rules: [CLAUDE.md](CLAUDE.md). Shared contracts: [docs/CONTRACTS.md](docs/CONTRACTS.md).
 API summary: [docs/api-contract.md](docs/api-contract.md).
 
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Browser
+    UI[React + Vite UI<br/>applicant / officer / senior / inspector / admin]
+  end
+  UI -- /api (JWT) --> API[FastAPI routes<br/>role checks in backend]
+  API --> SVC[Services]
+  subgraph SVC[Services - deterministic]
+    UP[Upload: magic bytes, size, SHA-256] --> EX[Extraction: pdfplumber / Tesseract OCR<br/>fields + page + bbox + confidence]
+    UP --> AN[Analysis: QR, page hashes,<br/>PDF metadata, signature presence, ELA]
+    VER[Verification gateway] --> MOCK[(MOCK issuer connectors)]
+    RULES[Rule engine: versioned YAML rules + checklists] --> FIND[Findings with evidence]
+    REV[Review: resolve / dismiss / escalate,<br/>decisions, letters]
+    AUD[audit.log - SHA-256 hash chain]
+  end
+  EX --> RULES
+  AN --> RULES
+  VER --> RULES
+  SVC --> DB[(SQLite dev / PostgreSQL docker)]
+  SVC --> FS[(File storage<br/>signed 5-min links)]
+  SUM[Optional LLM summary - OFF by default<br/>reads findings only, cites ids] -.-> FIND
+```
+
+Every write that matters goes through `audit.log()`. The LLM (if enabled) never feeds the rule engine.
+
+## Reset the demo (one command)
+```bash
+./scripts/reset-demo.sh            # Docker; works offline once images are built
+./scripts/reset-demo.sh --build    # rebuild images first
+./scripts/reset-demo.sh --local    # local SQLite dev
+.\scripts\reset-demo.ps1          # Windows PowerShell equivalent (-Build, -Local)
+```
+Then follow `docs/DEMO.md` (4-minute script + judge Q&A).
+
+## Evaluation
+```bash
+docker compose exec backend python -m scripts.evaluate --out /tmp/eval-results.md   # Git Bash: prefix MSYS_NO_PATHCONV=1
+docker compose cp backend:/tmp/eval-results.md docs/eval-results.md
+```
+Runs on a fresh temp database, never touches demo data. Results (`docs/eval-results.md`) are optimistic because
+the data is team-generated; the hard examples show where it breaks.
+
 ## Ports
 | Service | URL |
 |---|---|
@@ -123,6 +167,18 @@ finding text is sent (synthetic data); without credentials the panel shows "Summ
   Removing only the newest rows is not detectable from the chain alone.
 - Anomaly indicators, verification details and the priority score are filtered out for applicants in the backend.
 - Not implemented (do not claim): encryption at rest, digital signature validation, rate limiting.
+
+## Final checklist (Phase 4, 2026-10-26)
+| Check | Result |
+|---|---|
+| Backend tests | 139 passed in Docker (with OCR); 138 passed + 1 OCR test skipped locally |
+| Audit hash chain verifies after reset + full demo path (headless browser) | valid, 417 events |
+| Seed scenario check (expected vs actual findings) | 18/18 match in Docker; eval in docs/eval-results.md |
+| Offline demo | reset script works without `--build`; frontend loads no external resources; LLM off |
+| No secrets committed | `.env` git-ignored; only demo password for SYNTHETIC accounts; JWT secret from env |
+| No real data | all institutions, people, IDs and documents are generated and labelled SYNTHETIC |
+| Forbidden wording | no "fraud"/"forged" in UI, code or logs (a test asserts it); no Approve/Reject labels |
+| Disclaimer | footer on every page: prototype, not an official AICTE system |
 
 ## Prototype limitations
 - Tables are created with `create_all` (no migrations). Reset with `seed.py --reset` or `docker compose down -v`.

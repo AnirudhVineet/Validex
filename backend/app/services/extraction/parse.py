@@ -41,7 +41,17 @@ class ParsedField:
 
 
 def group_lines(words: list[Word]) -> list[Line]:
-    """Group words into reading-order lines by page and vertical position."""
+    """Group words into reading-order lines by page and vertical position.
+
+    OCR words carry Tesseract's own line ids, which survive slightly rotated scans (a skewed line
+    drifts several points from left to right), so those are grouped by id instead of position.
+    """
+    if words and all(w.line_key is not None for w in words):
+        groups: dict[tuple, list[Word]] = {}
+        for w in words:
+            groups.setdefault((w.page, *w.line_key), []).append(w)
+        ocr_lines = [Line(sorted(ws, key=lambda w: w.x0)) for ws in groups.values()]
+        return sorted(ocr_lines, key=lambda ln: (ln.page, min(w.top for w in ln.words)))
     lines: list[Line] = []
     for w in sorted(words, key=lambda w: (w.page, w.top, w.x0)):
         if lines:
@@ -111,7 +121,8 @@ def _normalize_value(name: str, raw: str) -> tuple[str, bool]:
         iso = normalize_date(value)
         return (iso, True) if iso else (value, False)
     if name == "certificate_number":
-        return value.replace(" ", "").upper(), True
+        # IDs never start or end with punctuation; OCR specks often add a trailing "." or "-".
+        return re.sub(r"^[^A-Za-z0-9]+|[^A-Za-z0-9]+$", "", value.replace(" ", "")).upper(), True
     if name == "land_area_acres":
         m = re.search(r"\d+(\.\d+)?", value)
         return (m.group(0), True) if m else (value, False)

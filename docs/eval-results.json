@@ -1,0 +1,224 @@
+{
+  "extraction": {
+    "per_field": {
+      "institution_name": [
+        82,
+        82
+      ],
+      "certificate_number": [
+        63,
+        63
+      ],
+      "address": [
+        59,
+        59
+      ],
+      "issuing_authority": [
+        62,
+        63
+      ],
+      "issue_date": [
+        80,
+        81
+      ],
+      "expiry_date": [
+        26,
+        26
+      ],
+      "land_area_acres": [
+        19,
+        19
+      ],
+      "faculty_count": [
+        19,
+        19
+      ],
+      "faculty_ids": [
+        19,
+        19
+      ]
+    },
+    "per_method": {
+      "pdf_text": [
+        419,
+        419
+      ],
+      "ocr": [
+        10,
+        12
+      ]
+    },
+    "overall": [
+      429,
+      431
+    ],
+    "failed_no_ocr": 0,
+    "classification": [
+      82,
+      82
+    ],
+    "misses": [
+      {
+        "file": "demo_upload/fire_noc__scanned.pdf",
+        "field": "issuing_authority",
+        "expected": "Divisional Fire Officer, SYNTHETIC Fire Services",
+        "got": null
+      },
+      {
+        "file": "demo_upload/fire_noc__scanned.pdf",
+        "field": "issue_date",
+        "expected": "2026-01-13",
+        "got": "43- 01-2026 \u2014"
+      }
+    ]
+  },
+  "validation": {
+    "tp": 16,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "diffs": []
+  },
+  "anomaly": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "diffs": []
+  },
+  "verification": {
+    "correct": 36,
+    "total": 36,
+    "confusion": [
+      {
+        "expected": "verified",
+        "actual": "verified",
+        "count": 29
+      },
+      {
+        "expected": "expired",
+        "actual": "expired",
+        "count": 2
+      },
+      {
+        "expected": "mismatch",
+        "actual": "mismatch",
+        "count": 2
+      },
+      {
+        "expected": "pending",
+        "actual": "pending",
+        "count": 1
+      },
+      {
+        "expected": "source_unavailable",
+        "actual": "source_unavailable",
+        "count": 1
+      },
+      {
+        "expected": "manual_review",
+        "actual": "manual_review",
+        "count": 1
+      }
+    ]
+  },
+  "signals": {
+    "pdf_clean_fp": [
+      0,
+      68
+    ],
+    "altered_detected": [
+      2,
+      2
+    ],
+    "ela_clean_fp": [
+      0,
+      20
+    ],
+    "ela_edit_detected": [
+      0,
+      20
+    ],
+    "near_dup_rescan_detected": [
+      "10",
+      10
+    ],
+    "near_dup_cross_type_fp": [
+      "0",
+      40
+    ]
+  },
+  "hard_examples": [
+    {
+      "case": "Abbreviated name (same institution)",
+      "value": "SYNTHETIC Inst. of Tech., Demo Nagar",
+      "should_flag": false,
+      "flagged": true,
+      "correct": false
+    },
+    {
+      "case": "Lower case and punctuation (same)",
+      "value": "synthetic institute of technology demo nagar",
+      "should_flag": false,
+      "flagged": false,
+      "correct": true
+    },
+    {
+      "case": "Different institution, similar name",
+      "value": "SYNTHETIC Institute of Technology, Demo Nagari",
+      "should_flag": true,
+      "flagged": false,
+      "correct": false
+    },
+    {
+      "case": "Different institution, one word changed",
+      "value": "SYNTHETIC Institute of Pharmacy, Demo Nagar",
+      "should_flag": true,
+      "flagged": true,
+      "correct": true
+    },
+    {
+      "case": "Completely different institution",
+      "value": "SYNTHETIC Riverside College of Arts, Elsewhere Town",
+      "should_flag": true,
+      "flagged": true,
+      "correct": true
+    }
+  ],
+  "hard_scans": {
+    "skipped": false,
+    "per_level": {
+      "scanned x1": [
+        15,
+        26
+      ],
+      "scanned x2": [
+        12,
+        26
+      ]
+    }
+  },
+  "seconds_per_application": [
+    0.9944764629999554,
+    0.8170824949993403,
+    0.60485477399925,
+    0.8007653889999347,
+    0.8046044040002016,
+    1.5452355340003123,
+    1.0061631389999093,
+    1.0263798189998852,
+    0.9683669189998909,
+    0.8048358010000811,
+    0.7573782250001386,
+    0.8535047519999353,
+    1.0101268830003391,
+    0.9474133280000387,
+    0.7870264940002016,
+    0.8191604929997993,
+    0.7931722889998127,
+    0.8131697819999317
+  ],
+  "ocr_available": true
+}

@@ -21,6 +21,7 @@ class Word:
     bottom: float
     page: int          # 1-based
     conf: float        # 0..1 (1.0 for the PDF text layer)
+    line_key: tuple | None = None  # OCR only: Tesseract's (block, paragraph, line) - robust to skew
 
 
 def pdf_text_words(path: Path) -> tuple[list[Word], int]:
@@ -56,8 +57,9 @@ def _ocr_image(image, page_no: int, scale: float) -> list[Word]:
         if not text or conf < 0:
             continue
         x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
+        line_key = (data["block_num"][i], data["par_num"][i], data["line_num"][i])
         words.append(Word(text, x * scale, y * scale, (x + w) * scale, (y + h) * scale,
-                          page_no, conf / 100.0))
+                          page_no, conf / 100.0, line_key))
     return words
 
 

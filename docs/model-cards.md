@@ -7,7 +7,8 @@ them into findings, and authorised officials decide. Anomaly signals are only ev
 **preliminary indicators that require manual review**.
 
 All measurements are on our own SYNTHETIC documents, so they are optimistic. Real documents
-vary far more. Phase 4 adds a fuller evaluation in `docs/eval-results.md`.
+vary far more. Full numbers: `docs/eval-results.md` (regenerate with `python -m scripts.evaluate`;
+run it inside Docker so OCR is included).
 
 ---
 
@@ -16,8 +17,11 @@ vary far more. Phase 4 adds a fuller evaluation in `docs/eval-results.md`.
   faculty IDs, with page + bbox + confidence for every value.
 - **How:** PDF text layer first; if a PDF has fewer than 15 words it is treated as a scan and OCR'd
   at 200 dpi. Fields are found by matching printed labels ("Valid Until:") with rapidfuzz.
-- **Measured:** all fields matched on the 5 digital synthetic document types; the noisy scanned fire NOC
-  extracts its key fields with Tesseract 5 in Docker.
+- **Measured (eval-results.md):** 99.5% of fields exact overall; 100% on digital PDFs (419 fields);
+  83% on the seeded noisy scans. OCR words are grouped by Tesseract's own line ids, because a slightly rotated
+  scan drifts ~5 pt across a line (position-based grouping cut values off; 50% before this change).
+- **Hard set:** all five types scanned once: 58% of fields exact; scanned twice: 46%. Scans are the weakest
+  area; low-confidence OCR values are flagged for officer confirmation.
 - **Limits / failure modes:** relies on "Label: value" lines on one text line; multi-column layouts,
   tables other than the faculty list, handwriting, stamps over text and non-English text are not handled.
   OCR confusions (O/0, l/1) can corrupt IDs; OCR values below 0.85 confidence are flagged for confirmation.
@@ -28,6 +32,12 @@ vary far more. Phase 4 adds a fuller evaluation in `docs/eval-results.md`.
 - **How:** keyword counts from `config/doc_types.yaml`, title lines weighted x3. Deterministic.
 - **Limits:** keyword lists are tuned to our synthetic titles; unfamiliar layouts return "unknown"
   (no finding), never a guess.
+
+### Name / address matching (rapidfuzz, CONS-001 / CONS-002)
+- Normalised (case, punctuation, filler words) token-sort similarity >= 88 for names, token-set >= 80 for addresses.
+- **Known errors (eval hard set):** flags an abbreviated name of the same institution ("Inst. of Tech."), and
+  misses a near-identical name of a different institution ("Demo Nagari" vs "Demo Nagar"). Findings only;
+  issuer verification compares names independently.
 
 ## 3. QR decoding (OpenCV)
 - **Purpose:** read the MOCK issuer reference printed as a QR code; it feeds verification.
@@ -45,7 +55,7 @@ vary far more. Phase 4 adds a fuller evaluation in `docs/eval-results.md`.
 ## 5. Near-duplicate pages (perceptual hash) - ANO-002
 - **How:** page 1 rasterised, median-filtered, Otsu-binarised, cropped to content, pHash with 576 bits.
 - **Measured (4 seeds x 5 types):** same document re-scanned = 52-88 bits apart; different document types
-  >= 106 apart. Threshold 96. Different certificates on the *same template* can be 56 apart, so this
+  >= 106 apart. Threshold 96. Eval: 10/10 rescans detected, 0/40 cross-type false matches. Different certificates on the *same template* can be 56 apart, so this
   check only compares slots within one application (different document types).
 - **Limits:** margin is modest; heavy rotation or cropping of a rescan can exceed the threshold
   (missed duplicate). A hit means "pages look alike", never "this is a copy".

@@ -187,6 +187,11 @@ Faculty lists also produce `faculty_count` and `faculty_ids` from table rows.
   Every point cites finding ids; uncited points are dropped; otherwise `insufficient_evidence = true`.
   Never stored as a finding, never part of validation.
 
+## Evaluation
+- `python -m scripts.evaluate` (backend/) regenerates documents into a temp folder, seeds a temp DB through the
+  real services and writes `docs/eval-results.md` + `.json`. Expected verification statuses per scenario live in
+  `EXPECTED_VERIFICATION` in that script; expected rule ids come from `seed/data.py`.
+
 ## Evidence pages
 - `POST /api/documents/{id}/link` also returns `page_url_template`, `pages`, `page_scale`.
   PNG pixel = bbox unit x `page_scale` (2.0 for PDFs, 1.0 for images).
