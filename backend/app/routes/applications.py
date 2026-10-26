@@ -8,9 +8,10 @@ from app.enums import ApplicationStatus, FindingStatus, Role, Severity
 from app.models import Application, ApplicationVersion, Finding, Institution, User
 from app.schemas import (
     ApplicationCreate, ApplicationListItem, ApplicationOut, ApplicationUpdate, ApplicationVersionOut,
-    ChecklistItemOut, DecisionRequest,
+    ChecklistItemOut, DecisionRequest, PriorityOut,
 )
 from app.services import applications as svc
+from app.services import priority
 from app.services.access import STAFF, can_view, ensure_view
 from app.services.report import checklist_status
 from app.services.validation import latest_run, run_validation
@@ -55,7 +56,10 @@ def list_applications(status_filter: ApplicationStatus | None = Query(None, alia
                     Finding.validation_run_id == run.id, Finding.status == FindingStatus.open)
                 item["open_findings"] = db.scalar(base) or 0
                 item["critical_findings"] = db.scalar(base.where(Finding.severity == Severity.critical)) or 0
+            item["priority_score"] = priority.compute(db, app)["score"]
         out.append(item)
+    if user.role in STAFF:
+        out.sort(key=lambda i: i.get("priority_score") or 0, reverse=True)
     return out
 
 
@@ -65,6 +69,17 @@ def get_one(application_id: str, db: Session = Depends(get_db),
     app = load_application(db, application_id)
     ensure_view(user, app)
     return app
+
+
+@router.get("/{application_id}/priority", response_model=PriorityOut)
+def get_priority(application_id: str, db: Session = Depends(get_db),
+                 user: User = Depends(get_current_user)) -> dict:
+    """Review-priority aid with its factor breakdown. Never shown to applicants."""
+    app = load_application(db, application_id)
+    ensure_view(user, app)
+    if user.role not in STAFF:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Review priority is for scrutiny staff")
+    return priority.compute(db, app)
 
 
 @router.patch("/{application_id}", response_model=ApplicationOut)

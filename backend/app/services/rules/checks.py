@@ -314,7 +314,7 @@ class StatusesParams(BaseModel):
 
 class MaxDistanceParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    max_distance: int = Field(ge=0, le=64)
+    max_distance: int = Field(ge=0, le=576)
 
 
 _VERIFICATION_TEXT = {
@@ -392,7 +392,7 @@ def near_duplicate_pages(ctx: ValidationContext, params: MaxDistanceParams) -> C
             if dist <= params.max_distance:
                 result.findings.append(FindingDraft(
                     title=f"Preliminary indicator: '{ctx.label(a.doc_type)}' and '{ctx.label(b.doc_type)}' look nearly identical",
-                    explanation=f"Perceptual hashes of page 1 differ by {dist} of 256 bits (threshold {params.max_distance})."
+                    explanation=f"Perceptual hashes of page 1 differ by {dist} of 576 bits (threshold {params.max_distance})."
                                 + _MAY_BE_LEGIT,
                     document_id=b.id, found_value=f"distance {dist}", expected_value=f"> {params.max_distance}",
                 ))

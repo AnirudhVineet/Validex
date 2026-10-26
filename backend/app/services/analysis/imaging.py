@@ -1,8 +1,8 @@
 """Rasterise documents and compute perceptual page hashes for near-duplicate detection.
 
-Measured on our synthetic set (hash_size=16, 256 bits, after denoise + content crop):
-same document rescanned ~16 bits apart; different document types >= 22 bits apart.
-Different certificates on the SAME template are close (2-12), so a near-duplicate hit means
+Measured on our synthetic set (hash_size=24, 576 bits, after denoise + content crop, 4 seeds x
+5 doc types): the same document rescanned is 52-88 bits apart; different document types are
+>= 106 apart. Different certificates on the SAME template can be as close as 56, so a hit means
 "these pages look alike", never "this is a copy" (see docs/model-cards.md).
 """
 from pathlib import Path
@@ -12,7 +12,7 @@ import imagehash
 import numpy as np
 from PIL import Image, ImageOps
 
-HASH_SIZE = 16
+HASH_SIZE = 24
 
 
 def rasterize(path: Path, mime: str, dpi: int, max_pages: int) -> list[Image.Image]:

@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.db import create_all
-from app.routes import applications, audit, auth, dashboard, documents, users, validation
+from app.routes import (applications, audit, auth, dashboard, documents, notifications, rules, users,
+                        validation, verification)
 
 DISCLAIMER = "Hackathon prototype. Not an official AICTE system. Decision support only."
 
@@ -26,7 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (auth, users, audit, dashboard, applications, documents, validation):
+for module in (auth, users, audit, dashboard, applications, documents, validation, verification,
+               notifications, rules):
     app.include_router(module.router)
 
 

@@ -198,7 +198,7 @@ rules:
     description: Different checklist slots do not contain near-identical pages.
     category: anomaly
     severity: low
-    condition: {check: near_duplicate_pages, params: {max_distance: 18}}
+    condition: {check: near_duplicate_pages, params: {max_distance: 96}}
     recommended_action: Open both files and compare them side by side.
     version: 1
     visible_to_applicant: false

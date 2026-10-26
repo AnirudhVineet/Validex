@@ -6,13 +6,15 @@ indicators or internal-only checks). Staff see everything for official runs.
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.enums import Role, Severity
-from app.models import Application, Finding, Institution, User, ValidationRun
-from app.services.access import ensure_view
+from app.enums import Role, RuleSetKind, Severity
+from app.models import Application, Finding, Institution, RuleSetVersion, User, ValidationRun
+from app.services import priority
+from app.services.access import STAFF, ensure_view
 from app.services.applications import current_documents, missing_form_fields
 from app.services.checklist import resolve_checklist
 from app.services.documents import get_fields
-from app.services.rules.loader import get_checklist, load_doc_types
+from app.services.rules.loader import get_checklist, get_rule_set, load_doc_types, parse_rule_set
+from app.services.verification import latest_verifications
 from app.services.validation import latest_run
 
 DISCLAIMER = ("Decision support only. Findings are automated pre-validation results for an "
@@ -49,6 +51,17 @@ def checklist_status(db: Session, app: Application) -> list[dict]:
     return out
 
 
+def rules_info(db: Session, run: ValidationRun) -> dict:
+    """Describe the rules of the rule-set version a run used (falls back to the active set)."""
+    name, _, version = run.rule_set_version.partition("@v")
+    row = db.execute(select(RuleSetVersion).where(
+        RuleSetVersion.kind == RuleSetKind.rules, RuleSetVersion.name == name,
+        RuleSetVersion.version == int(version or 0))).scalar_one_or_none()
+    config = parse_rule_set(row.content_yaml) if row else get_rule_set(db)[1]
+    return {r.id: {"description": r.description, "category": r.category, "check": r.condition.check}
+            for r in config.rules}
+
+
 def build_report(db: Session, user: User, app: Application, run_id: str | None = None) -> dict:
     ensure_view(user, app)
     is_applicant = user.role == Role.applicant
@@ -73,7 +86,20 @@ def build_report(db: Session, user: User, app: Application, run_id: str | None =
             "extraction_error": d.extraction_error, "fields": get_fields(db, d),
         })
 
+    staff = user.role in STAFF
+    verifications = []
+    if staff:
+        types = {d["id"]: d["doc_type"] for d in documents}
+        for v in latest_verifications(db, app).values():
+            if v.document_id in types:
+                verifications.append({**{c: getattr(v, c) for c in (
+                    "id", "document_id", "source", "is_mock", "reference_submitted", "requested_at", "status",
+                    "submitted_values", "source_values", "mismatches", "error")}, "doc_type": types[v.document_id]})
+
     return {
+        "rules": rules_info(db, run) if run else {},
+        "verifications": verifications,
+        "priority": priority.compute(db, app) if staff else None,
         "application": app,
         "institution": db.get(Institution, app.institution_id),
         "run": run,

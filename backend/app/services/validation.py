@@ -112,6 +112,9 @@ def run_validation(db: Session, user: User, app: Application, precheck: bool,
         "checklist_version": checklist_version, "findings": len(result.findings),
         "incomplete_checks": len(result.incomplete), "today": today.isoformat(),
     })
+    from app.services import alerts  # local import: alerts reads verification + finding tables
+
+    alerts.after_validation(db, app, run)
     return run
 
 

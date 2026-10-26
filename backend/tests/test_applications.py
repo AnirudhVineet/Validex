@@ -103,7 +103,7 @@ def test_return_resubmit_creates_new_version(client, auth_header, make_pdf, db):
     res = client.post(f"/api/applications/{app_id}/decision", headers=officer,
                       json={"decision": "return_for_correction", "reason": "Fire NOC has expired"})
     assert res.json()["status"] == "returned_for_correction" and res.json()["current_version"] == 2
-    assert db.execute(select(Notification)).scalars().first().kind == "awaiting_correction"
+    assert "awaiting_correction" in {n.kind for n in db.execute(select(Notification)).scalars()}
 
     assert upload(client, applicant, app_id, "fire_noc", make_pdf("fire_noc", seed=9).pdf).status_code == 201
     assert client.post(f"/api/applications/{app_id}/submit", headers=applicant).json()["status"] == "submitted"

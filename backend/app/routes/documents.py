@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,7 +10,7 @@ from app.models import Application, ApplicationDocument, ExtractedField, User
 from app.routes.applications import load_application
 from app.schemas import DocumentOut, ExtractedFieldOut, FieldCorrection, FileLinkOut
 from app.services import documents as svc
-from app.services import storage
+from app.services import pages, storage
 from app.services.access import ensure_view
 
 router = APIRouter(tags=["documents"])
@@ -59,7 +59,11 @@ def link(document_id: str, db: Session = Depends(get_db), user: User = Depends(g
     doc, app = load_document(db, document_id)
     token = svc.issue_file_link(db, user, app, doc)
     db.commit()
-    return {"url": f"/api/files/{token}", "expires_in_seconds": settings.file_link_expire_seconds}
+    is_pdf = doc.mime_type == "application/pdf"
+    return {"url": f"/api/files/{token}", "expires_in_seconds": settings.file_link_expire_seconds,
+            "page_url_template": f"/api/files/{token}/pages/{{page}}",
+            "pages": (doc.analysis or {}).get("pdf", {}).get("pages", 1) if is_pdf else 1,
+            "page_scale": pages.PDF_SCALE if is_pdf else 1.0}
 
 
 @router.get("/api/files/{token}", include_in_schema=False)
@@ -73,6 +77,21 @@ def serve_file(token: str, db: Session = Depends(get_db)) -> FileResponse:
     return FileResponse(storage.full_path(doc.storage_path), media_type=doc.mime_type,
                         headers={"Cache-Control": "no-store",
                                  "Content-Disposition": "inline"})
+
+
+@router.get("/api/files/{token}/pages/{page}", include_in_schema=False)
+def serve_page(token: str, page: int, db: Session = Depends(get_db)) -> Response:
+    """PNG of one page, used to highlight evidence bboxes. Same short-lived token as the file."""
+    claims = storage.read_file_token(token)
+    if claims is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Link expired or invalid")
+    doc = db.get(ApplicationDocument, claims["doc"])
+    if doc is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    png = pages.render_page_png(storage.full_path(doc.storage_path), doc.mime_type, page)
+    if png is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Page not found")
+    return Response(png, media_type="image/png", headers={"Cache-Control": "no-store"})
 
 
 @router.patch("/api/fields/{field_id}", response_model=ExtractedFieldOut)

@@ -82,6 +82,7 @@ class ApplicationListItem(ApplicationOut):
     institution_name: str
     open_findings: int = 0
     critical_findings: int = 0
+    priority_score: int | None = None
 
 
 class ApplicationVersionOut(ORMModel):
@@ -124,6 +125,9 @@ class DocumentOut(ORMModel):
 class FileLinkOut(BaseModel):
     url: str
     expires_in_seconds: int
+    page_url_template: str = Field(description="Replace {page} with a 1-based page number to get a PNG")
+    pages: int
+    page_scale: float = Field(description="PNG pixels per bbox unit (PDF points, or pixels for images)")
 
 
 class FieldCorrection(BaseModel):
@@ -244,7 +248,78 @@ class ReportOut(BaseModel):
     checklist: list[ChecklistItemOut]
     missing_form_fields: list[str]
     documents: list[ReportDocument]
+    rules: "dict[str, RuleInfo]" = Field(description="What each rule in this run checks (explainability)")
+    verifications: "list[VerificationOut]" = Field(default_factory=list, description="Staff only; empty for applicants")
+    priority: "PriorityOut | None" = Field(default=None, description="Staff only")
     disclaimer: str
+
+
+class VerificationOut(VerificationResultOut):
+    id: str
+    document_id: str
+    doc_type: str
+
+
+class PriorityFactor(BaseModel):
+    factor: str
+    points: int
+    detail: str
+
+
+class PriorityOut(BaseModel):
+    score: int
+    max: int
+    raw_points: int
+    description: str
+    factors: list[PriorityFactor]
+
+
+class NotificationOut(ORMModel):
+    id: str
+    application_id: str | None
+    kind: str
+    message: str
+    created_at: datetime
+    read_at: datetime | None
+
+
+class RuleSetVersionOut(ORMModel):
+    id: str
+    name: str
+    version: int
+    content_hash: str
+    is_active: bool
+    created_by: str | None
+    created_at: datetime
+
+
+class RuleSetDetail(RuleSetVersionOut):
+    content_yaml: str
+
+
+class RuleText(BaseModel):
+    content_yaml: str = Field(min_length=1)
+
+
+class RuleSave(RuleText):
+    reason: str = Field(min_length=5)
+
+
+class RuleValidation(BaseModel):
+    valid: bool
+    errors: list[str]
+    rule_count: int
+
+
+class RerunResult(BaseModel):
+    rule_set_version: str
+    applications_rerun: int
+
+
+class RuleInfo(BaseModel):
+    description: str
+    category: FindingCategory
+    check: str
 
 
 # ---- Audit ----
@@ -279,6 +354,9 @@ EXPORTED_SCHEMAS: list[type[BaseModel]] = [
     LoginRequest, TokenResponse, UserOut, InstitutionOut, ApplicationCreate, ApplicationUpdate,
     ApplicationOut, ApplicationListItem, ApplicationVersionOut, ChecklistItemOut, DocumentOut,
     FileLinkOut, FieldCorrection, ReviewRequest, DecisionRequest, Evidence, ExtractedFieldOut,
-    FindingOut, IncompleteCheck, ValidationRunOut, ReportOut, VerificationResultOut,
+    FindingOut, IncompleteCheck, ValidationRunOut, ReportOut, VerificationResultOut, VerificationOut,
+    PriorityOut, NotificationOut, RuleSetVersionOut, RuleSetDetail, RuleText, RuleSave, RuleValidation,
+    RerunResult, RuleInfo,
     AuditEventOut, ChainVerifyResult, DashboardSummary,
 ]
+ReportOut.model_rebuild()
