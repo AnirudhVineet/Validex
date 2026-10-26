@@ -97,7 +97,7 @@ export function FindingCard({ finding, docLabel, rule, canReview, onChanged }) {
 
 export function FindingsList({ findings, documents, rules, canReview, onChanged }) {
   const labels = Object.fromEntries((documents || []).map((d) => [d.id, d.doc_type.replaceAll("_", " ")]));
-  if (!findings.length) return <p className="py-6 text-center text-sm text-emerald-700">No findings. All checks passed.</p>;
+  if (!findings.length) return <p className="py-6 text-center text-sm text-slate-500">No findings to show.</p>;
   return (
     <div className="space-y-3">
       {findings.map((f) => (

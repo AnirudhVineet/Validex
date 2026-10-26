@@ -116,7 +116,7 @@ export default function ApplicationWorkspace() {
         </Card>
 
         <Card
-          title="Pre-check"
+          title={editable ? "Pre-check" : "Check results"}
           actions={editable && (
             <Button variant="secondary" disabled={busy} onClick={() => run(async () => {
               await api(`/applications/${app.id}/validate?precheck=true`, { method: "POST" });
